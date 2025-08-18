@@ -8,6 +8,8 @@ export { default as MyScreen } from './screens/MyScreen';
 export { default as Button } from './components/Button';
 export { default as TabBar } from './components/TabBar';
 export { default as BannerCarousel } from './components/BannerCarousel';
+export { default as CustomHeader } from './components/CustomHeader';
+export { default as HomeHeader } from './components/HomeHeader';
 
 // Navigation
 export { default as AppNavigator } from './navigation/AppNavigator';
