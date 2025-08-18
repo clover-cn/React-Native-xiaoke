@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -51,9 +51,51 @@ const HomeScreen: React.FC<HomeScreenProps> = () => {
       image: require('../../assets/images/icon_home_xxj.png'),
     },
   ];
+
+  // 模拟消息数据
+  const messages = [
+    { id: '1', title: '您有新消息!' },
+    { id: '2', title: '系统维护通知' },
+    { id: '3', title: '充值优惠活动开始了' },
+    { id: '4', title: '设备维修完成' },
+    { id: '5', title: '新功能上线啦' },
+  ];
+
+  // 自动轮播相关
+  const scrollViewRef = useRef<ScrollView>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  // 自动轮播效果
+  useEffect(() => {
+    if (messages.length <= 1) return;
+
+    const timer = setInterval(() => {
+      setCurrentIndex((prevIndex) => {
+        const nextIndex = prevIndex === messages.length - 1 ? 0 : prevIndex + 1;
+
+        // 滚动到下一条消息
+        scrollViewRef.current?.scrollTo({
+          y: nextIndex * 32, // 32是每条消息的高度
+          animated: true,
+        });
+        console.log('====>',scrollViewRef.current);
+        console.log('====>2',nextIndex);
+        
+        return nextIndex;
+      });
+    }, 3000); // 每3秒切换一次
+
+    return () => clearInterval(timer);
+  }, [messages.length]);
+
   const handleTitlePress = () => {
     console.log('项目选择被点击');
     // 这里可以打开项目选择弹窗
+  };
+
+  const handleMessagePress = (message: any) => {
+    console.log('消息被点击:', message);
+    // 这里可以打开消息详情
   };
 
   return (
@@ -80,7 +122,23 @@ const HomeScreen: React.FC<HomeScreenProps> = () => {
             source={require('../../assets/images/icon_xiaoxi.png')}
             resizeMode="contain"
           />
-          <Text style={{color:'#FF7E38'}}>您有新消息!!!</Text>
+          <ScrollView
+            ref={scrollViewRef}
+            style={styles.messageScroll}
+            showsVerticalScrollIndicator={false}
+            pagingEnabled={true}
+            automaticallyAdjustContentInsets={false}
+          >
+            {messages.map((message) => (
+              <TouchableOpacity
+                key={message.id}
+                style={styles.messageItem}
+                onPress={() => handleMessagePress(message)}
+              >
+                <Text style={styles.messageText}>{message.title}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </View>
         {/* 余额优惠券内容 */}
         <View style={styles.mainContent}>
@@ -320,7 +378,21 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     marginRight: 5,
-  }
+  },
+  messageScroll: {
+    flex: 1,
+    height: 32,
+  },
+  messageItem: {
+    height: 32,
+    justifyContent: 'center',
+  },
+  messageText: {
+    color: '#FF7E38',
+    fontSize: 14,
+    lineHeight: 32,
+    paddingHorizontal: 5,
+  },
 });
 
 export default HomeScreen;
