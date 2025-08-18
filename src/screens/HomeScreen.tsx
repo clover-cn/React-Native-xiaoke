@@ -14,8 +14,10 @@ import { useTheme } from '../hooks/useTheme';
 import BannerCarousel from '../components/BannerCarousel';
 import HomeHeader from '../components/HomeHeader';
 import { Images } from '../assets/images';
-
+import LinearGradient from 'react-native-linear-gradient'; // 导入 LinearGradient
 const { width } = Dimensions.get('window');
+const COMMON_IMG_ASPECT_RATIO = 106 / 670; // 图片实际宽高比
+const calculatedImageHeight = (width - 40) * COMMON_IMG_ASPECT_RATIO;
 interface HomeScreenProps {
   // 为将来的导航或其他props预留
 }
@@ -71,6 +73,15 @@ const HomeScreen: React.FC<HomeScreenProps> = () => {
 
       {/* 页面内容 */}
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* 消息列表 */}
+        <View style={styles.messageList}>
+          <Image
+            style={styles.messageIcon}
+            source={require('../../assets/images/icon_xiaoxi.png')}
+            resizeMode="contain"
+          />
+          <Text style={{color:'#FF7E38'}}>您有新消息!!!</Text>
+        </View>
         {/* 余额优惠券内容 */}
         <View style={styles.mainContent}>
           <View style={styles.moneyStyle}>
@@ -118,6 +129,42 @@ const HomeScreen: React.FC<HomeScreenProps> = () => {
               </View>
             ))
           }
+        </View>
+        {/* 预约 */}
+        <Image
+          style={styles.YUYUE}
+          source={require('../../assets/images/yuyue.png')}
+          resizeMode="contain"
+        />
+        {/* 常用设备 */}
+        <View style={styles.box_changyong}>
+          <Image
+            style={styles.commonImg}
+            source={require('../../assets/images/img_cysb_bg.png')}
+            resizeMode="contain"
+          />
+          <View style={styles.common}>
+            <LinearGradient
+              colors={['#FE8F0A', '#FF510A']} // 对应的起始和结束颜色
+              start={{ x: 0, y: 0 }} // 渐变开始点：左上角
+              end={{ x: 0, y: 1 }}   // 渐变结束点：左下角 (从上到下)
+              locations={[0.03, 1.0]} // 对应 3% 和 100%
+              style={styles.line}
+            />
+            <Text style={styles.commonText}>常用设备</Text>
+          </View>
+        </View>
+        <View style={styles.commonList}>
+          <View style={styles.itemList}>
+            <Image
+              style={styles.ListIcon}
+              source={require('../../assets/images/icon_dingwei.png')}
+              resizeMode="contain"
+            />
+            <Text>洗浴</Text>
+          </View>
+          <Text>1栋 1层 1-1房间</Text>
+          <Text style={styles.usageText}>使用</Text>
         </View>
       </ScrollView>
     </View>
@@ -188,6 +235,92 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
   },
+
+  YUYUE:{
+    marginTop: 20,
+    marginHorizontal:20,
+    width: width - 40,
+    height: 80,
+  },
+
+  box_changyong:{
+    position: 'relative',
+    height: calculatedImageHeight,
+    marginTop: 20,
+  },
+  commonImg:{
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    marginHorizontal:20,
+    width: width - 40,
+    height: calculatedImageHeight,
+    padding: 20,
+  },
+  common:{
+    position: 'absolute',
+    top: '50%',
+    left: 40,
+    transform: [{ translateY: '-50%' }],
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  line:{
+    width: 4,
+    height: 15,
+    borderRadius: 2,
+  },
+  commonText:{
+    color: '#202131',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 10,
+  },
+  commonList:{
+    width: width - 40,
+    height:100,
+    marginHorizontal:20,
+    paddingHorizontal:20,
+    backgroundColor: '#FFFDFA',
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent:'space-between'
+  },
+  ListIcon:{
+    width: 20,
+    height: 20,
+    marginRight: 5,
+  },
+  itemList:{
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  usageText:{
+    width: 50,
+    height: 25,
+    backgroundColor:'#FF870A',
+    textAlign:'center',
+    lineHeight: 25,
+    color: '#fff',
+    borderRadius: 15,
+  },
+  messageList:{
+    width: width - 40,
+    height: 32,
+    marginHorizontal: 20,
+    marginBottom: 10,
+    borderRadius: 8,
+    color:'#FF7E38',
+    backgroundColor: '#FFF5F0',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+  },
+  messageIcon:{
+    width: 20,
+    height: 20,
+    marginRight: 5,
+  }
 });
 
 export default HomeScreen;
