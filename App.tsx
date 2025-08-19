@@ -1,5 +1,5 @@
 import React from 'react';
-import { StatusBar, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import {
   SafeAreaProvider,
   SafeAreaView,
@@ -11,13 +11,10 @@ function App() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={theme.background}
-      />
-      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-        <AppNavigator />
-      </SafeAreaView>
+      {/* 让页面内各自控制沉浸式状态栏，去掉全局 StatusBar 覆盖 */}
+      {/* 不用 SafeAreaView 包住整个 App，避免状态栏区域被全局白色填充；
+          首页会自己处理沉浸式背景和安全区。其他页面若需要可局部使用 SafeAreaView。 */}
+      <AppNavigator />
     </SafeAreaProvider>
   );
 }

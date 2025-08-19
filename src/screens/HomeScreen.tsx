@@ -66,7 +66,42 @@ const HomeScreen: React.FC<HomeScreenProps> = () => {
         id: '3',
         name: '洗衣机',
         address:'1栋 1层 1-1房间'
-      }
+      },
+      {
+        id: '4',
+        name: '洗衣机',
+        address:'1栋 1层 1-1房间'
+      },
+      {
+        id: '5',
+        name: '洗衣机',
+        address:'1栋 1层 1-1房间'
+      },
+      {
+        id: '6',
+        name: '洗衣机',
+        address:'1栋 1层 1-1房间'
+      },
+      {
+        id: '7',
+        name: '洗衣机',
+        address:'1栋 1层 1-1房间'
+      },
+      {
+        id: '8',
+        name: '洗衣机',
+        address:'1栋 1层 1-1房间'
+      },
+      {
+        id: '9',
+        name: '洗衣机',
+        address:'1栋 1层 1-1房间'
+      },
+      {
+        id: '10',
+        name: '洗衣机',
+        address:'1栋 1层 1-1房间'
+      },
   ];
 
   // 模拟消息数据
@@ -115,21 +150,22 @@ const HomeScreen: React.FC<HomeScreenProps> = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      {/* 自定义Header */}
-      <HomeHeader projectName="test_01" onTitlePress={handleTitlePress} />
-
-      {/* 轮播图 - 绝对定位压在背景图上 */}
-      <View style={styles.bannerOverlay}>
-        <BannerCarousel
-          data={Images.bannerImage}
-          onPress={(item, index) => {
-            console.log('Banner clicked:', item, index);
-          }}
-        />
-      </View>
 
       {/* 页面内容 */}
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* 自定义Header */}
+        <HomeHeader projectName="test_01" onTitlePress={handleTitlePress} />
+
+        {/* 轮播图 - 绝对定位压在背景图上 */}
+        <View style={styles.bannerOverlay}>
+          <BannerCarousel
+            data={Images.bannerImage}
+            onPress={(item, index) => {
+              console.log('Banner clicked:', item, index);
+            }}
+          />
+        </View>
+
         {/* 消息列表 */}
         <View style={styles.messageList}>
           <Image
@@ -143,6 +179,7 @@ const HomeScreen: React.FC<HomeScreenProps> = () => {
             showsVerticalScrollIndicator={false}
             pagingEnabled={true}
             automaticallyAdjustContentInsets={false}
+            scrollEnabled={false}
           >
             {messages.map((message) => (
               <TouchableOpacity
@@ -259,7 +296,7 @@ const styles = StyleSheet.create({
   },
   bannerOverlay: {
     position: 'absolute',
-    top: 60, // 调整这个值来控制轮播图在背景图上的位置
+    top: 70, // 调整这个值来控制轮播图在背景图上的位置
     left: 20,
     right: 20,
     zIndex: 1001, // 确保轮播图在背景图上方
@@ -357,11 +394,9 @@ const styles = StyleSheet.create({
   },
   commonList:{
     width: width - 40,
-    height:100,
     marginHorizontal:20,
     paddingHorizontal:20,
     backgroundColor: '#FFFDFA',
-
   },
   ListIcon:{
     width: 20,

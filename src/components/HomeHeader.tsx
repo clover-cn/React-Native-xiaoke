@@ -54,7 +54,7 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
 const styles = StyleSheet.create({
   titleBar: {
     position: 'absolute',         // 绝对定位
-    top: 0,                       // 紧贴导航栏内容区域顶部
+    top: 20,                       // 紧贴导航栏内容区域顶部
     left: 0,
     right: 0,
     flexDirection: 'row',
@@ -62,6 +62,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,        // 水平内边距
     paddingVertical: 8,           // 垂直内边距
     zIndex: 10,                   // 确保在背景图上方
+    // backgroundColor:'red'
   },
   iconTubiao: {
     width: 32, // 64rpx converted
