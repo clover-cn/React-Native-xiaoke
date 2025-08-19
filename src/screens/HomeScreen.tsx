@@ -51,6 +51,23 @@ const HomeScreen: React.FC<HomeScreenProps> = () => {
       image: require('../../assets/images/icon_home_xxj.png'),
     },
   ];
+  const commonDevice = [
+      {
+        id: '1',
+        name: '洗浴',
+        address:'1栋 1层 1-1房间'
+      },
+      {
+        id: '2',
+        name: '电吹风',
+        address:'1栋 1层 1-1房间'
+      },
+      {
+        id: '3',
+        name: '洗衣机',
+        address:'1栋 1层 1-1房间'
+      }
+  ];
 
   // 模拟消息数据
   const messages = [
@@ -78,9 +95,6 @@ const HomeScreen: React.FC<HomeScreenProps> = () => {
           y: nextIndex * 32, // 32是每条消息的高度
           animated: true,
         });
-        console.log('====>',scrollViewRef.current);
-        console.log('====>2',nextIndex);
-        
         return nextIndex;
       });
     }, 3000); // 每3秒切换一次
@@ -91,6 +105,7 @@ const HomeScreen: React.FC<HomeScreenProps> = () => {
   const handleTitlePress = () => {
     console.log('项目选择被点击');
     // 这里可以打开项目选择弹窗
+    commonDevice.forEach
   };
 
   const handleMessagePress = (message: any) => {
@@ -213,16 +228,22 @@ const HomeScreen: React.FC<HomeScreenProps> = () => {
           </View>
         </View>
         <View style={styles.commonList}>
-          <View style={styles.itemList}>
-            <Image
-              style={styles.ListIcon}
-              source={require('../../assets/images/icon_dingwei.png')}
-              resizeMode="contain"
-            />
-            <Text>洗浴</Text>
-          </View>
-          <Text>1栋 1层 1-1房间</Text>
-          <Text style={styles.usageText}>使用</Text>
+          {
+            commonDevice.map((device,index) => (
+              <View style={[styles.List, index !== 0 && {marginTop:10}]} key={device.id}>
+                  <View style={styles.itemList}>
+                    <Image
+                      style={styles.ListIcon}
+                      source={require('../../assets/images/icon_dingwei.png')}
+                      resizeMode="contain"
+                    />
+                    <Text>{device.name}</Text>
+                  </View>
+                  <Text>{device.address}</Text>
+                  <Text style={styles.usageText}>使用</Text>
+              </View>
+            ))
+          }
         </View>
       </ScrollView>
     </View>
@@ -340,14 +361,18 @@ const styles = StyleSheet.create({
     marginHorizontal:20,
     paddingHorizontal:20,
     backgroundColor: '#FFFDFA',
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent:'space-between'
+
   },
   ListIcon:{
     width: 20,
     height: 20,
     marginRight: 5,
+  },
+  List:{
+    width: '100%',
+    flexDirection:'row',
+    alignItems: 'center',
+    justifyContent:'space-between',
   },
   itemList:{
     flexDirection: 'row',
