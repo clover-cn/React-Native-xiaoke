@@ -22,6 +22,8 @@ interface HomeScreenProps {
   // 为将来的导航或其他props预留
 }
 
+const SCROLL_SWITCH_OFFSET = 80; // 超过该偏移后，切换为深色文字/白底
+
 const HomeScreen: React.FC<HomeScreenProps> = () => {
   const { theme } = useTheme();
   const deviceTypesData = [
@@ -137,6 +139,18 @@ const HomeScreen: React.FC<HomeScreenProps> = () => {
     return () => clearInterval(timer);
   }, [messages.length]);
 
+  // 顶部状态栏样式：在顶部使用“透明 + 浅色字”，下滑后使用“白底 + 深色字”
+  // 为避免切 translucent 导致的重布局卡顿，translucent 固定 true，仅通过覆盖层透明度 + barStyle 切换
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [overlayOpacity, setOverlayOpacity] = useState(0);
+  const onScroll = (e: any) => {
+    const y = e?.nativeEvent?.contentOffset?.y || 0;
+    // 渐变计算（0~SCROLL_SWITCH_OFFSET 线性映射到 0~1）
+    const ratio = Math.min(1, Math.max(0, y / SCROLL_SWITCH_OFFSET));
+    setOverlayOpacity(ratio);
+    setIsScrolled(ratio >= 1);
+  };
+
   const handleTitlePress = () => {
     console.log('项目选择被点击');
     // 这里可以打开项目选择弹窗
@@ -152,9 +166,21 @@ const HomeScreen: React.FC<HomeScreenProps> = () => {
     <View style={[styles.container, { backgroundColor: theme.background }]}>
 
       {/* 页面内容 */}
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+      >
         {/* 自定义Header */}
-        <HomeHeader projectName="test_01" onTitlePress={handleTitlePress} />
+        <HomeHeader
+          projectName="test_01"
+          onTitlePress={handleTitlePress}
+          statusBarTranslucent={true}
+          statusBarBgColor="#FFFFFF"
+          statusBarOverlayOpacity={overlayOpacity}
+          statusBarStyle={isScrolled ? 'dark-content' : 'light-content'}
+        />
 
         {/* 轮播图 - 绝对定位压在背景图上 */}
         <View style={styles.bannerOverlay}>

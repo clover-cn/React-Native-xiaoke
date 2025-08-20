@@ -15,17 +15,30 @@ const { width } = Dimensions.get('window');
 interface HomeHeaderProps {
   projectName?: string;
   onTitlePress?: () => void;
+  // 透传状态栏控制（用于滚动时动态切换）
+  statusBarStyle?: 'light-content' | 'dark-content';
+  statusBarTranslucent?: boolean;
+  statusBarBgColor?: string;
+  statusBarOverlayOpacity?: number;
 }
 
 const HomeHeader: React.FC<HomeHeaderProps> = ({
   projectName = '暂无项目',
   onTitlePress,
+  statusBarStyle,
+  statusBarTranslucent,
+  statusBarBgColor,
+  statusBarOverlayOpacity,
 }) => {
   return (
     <CustomHeader
       backgroundImage={require('../../assets/images/img_home_bg1.png')}
       onTitlePress={onTitlePress}
       contentStartFromStatusBar={true}
+      statusBarTranslucent={statusBarTranslucent}
+      statusBarBgColor={statusBarBgColor}
+      statusBarStyle={statusBarStyle}
+      statusBarOverlayOpacity={statusBarOverlayOpacity}
     >
       {/* 完全自定义首页Header内容 - 使用绝对定位紧贴状态栏 */}
       <TouchableOpacity

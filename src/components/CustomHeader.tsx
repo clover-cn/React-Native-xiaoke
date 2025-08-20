@@ -30,6 +30,10 @@ interface CustomHeaderProps {
   onTitlePress?: () => void;
   children?: React.ReactNode; // 用于完全自定义内容
   contentStartFromStatusBar?: boolean; // 内容是否从状态栏开始
+  statusBarStyle?: 'light-content' | 'dark-content'; // 状态栏文字颜色
+  statusBarTranslucent?: boolean; // 是否透明叠加到内容之上
+  statusBarBgColor?: string; // 状态栏背景色（Android 有效）
+  statusBarOverlayOpacity?: number; // 顶部覆盖层透明度（0~1），用于平滑切换
 }
 
 const CustomHeader: React.FC<CustomHeaderProps> = ({
@@ -46,17 +50,21 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
   onTitlePress,
   children,
   contentStartFromStatusBar = false,
+  statusBarStyle = 'light-content',
+  statusBarTranslucent = true,
+  statusBarBgColor = 'transparent',
+  statusBarOverlayOpacity = 0, // 默认透明
 }) => {
   const totalHeight = STATUS_BAR_HEIGHT + NAV_BAR_HEIGHT;
   const containerPaddingTop = contentStartFromStatusBar ? 0 : STATUS_BAR_HEIGHT;
 
   return (
     <>
-      {/* 设置状态栏为透明 */}
+      {/* 状态栏配置（可控透明与背景色） */}
       <StatusBar
-        translucent={true}
-        backgroundColor="transparent"
-        barStyle="light-content"
+        translucent={statusBarTranslucent}
+        backgroundColor={statusBarTranslucent ? 'transparent' : statusBarBgColor}
+        barStyle={statusBarStyle}
       />
 
       <View style={[styles.container, { height: totalHeight, paddingTop: containerPaddingTop }]}>
@@ -73,6 +81,9 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
         {!backgroundImage && (
           <View style={[styles.backgroundView, { backgroundColor, height: totalHeight }]} />
         )}
+
+        {/* 顶部状态栏区域的覆盖色（避免透明时文字不可见） */}
+        <View style={[styles.statusBarOverlay, { backgroundColor: statusBarBgColor, opacity: statusBarOverlayOpacity }]} />
 
         {/* 导航栏内容 */}
         <View style={styles.navBar}>
@@ -150,6 +161,13 @@ const styles = StyleSheet.create({
     top: -STATUS_BAR_HEIGHT, // 向上延伸到状态栏
     left: 0,
     width: '100%',
+  },
+  statusBarOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: STATUS_BAR_HEIGHT,
   },
   navBar: {
     height: NAV_BAR_HEIGHT,
