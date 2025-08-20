@@ -177,7 +177,7 @@ const HomeScreen: React.FC<HomeScreenProps> = () => {
           projectName="test_01"
           onTitlePress={handleTitlePress}
           statusBarTranslucent={true}
-          statusBarBgColor="#FFFFFF"
+          statusBarBgColor="#FF752A"
           statusBarOverlayOpacity={overlayOpacity}
           statusBarStyle={isScrolled ? 'dark-content' : 'light-content'}
         />
@@ -328,18 +328,17 @@ const styles = StyleSheet.create({
     zIndex: 1001, // 确保轮播图在背景图上方
   },
   mainContent: {
-    flex: 1,
     paddingHorizontal: 20,
     alignItems: 'center',
-    justifyContent: 'space-between',
     flexDirection: 'row',
+    gap: 12
   },
   subtitle: {
     fontSize: 16,
     textAlign: 'center',
   },
   moneyStyle: {
-    width: 150,
+    flex: 1,
     height: 65,
     backgroundColor: '#FFF8EC',
     borderRadius: 10,
