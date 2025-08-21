@@ -207,6 +207,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ scanResult, onScanResultReceive
         showsVerticalScrollIndicator={false}
         onScroll={onScroll}
         scrollEventThrottle={16}
+        bounces={false}
+        overScrollMode="never"
       >
         {/* 自定义Header */}
         <HomeHeader
