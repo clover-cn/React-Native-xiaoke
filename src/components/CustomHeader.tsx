@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
     height: NAV_BAR_HEIGHT,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    // paddingHorizontal: 16,
   },
   leftContainer: {
     width: 60,
