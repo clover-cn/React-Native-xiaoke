@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, BackHandler, ToastAndroid } from 'react-native';
 import { useTheme } from '../hooks/useTheme';
 import HomeScreen from '../screens/HomeScreen';
 import ChargeScreen from '../screens/ChargeScreen';
@@ -15,7 +15,44 @@ const AppNavigatorContent: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [scanResult, setScanResult] = useState<string | undefined>();
   const { theme } = useTheme();
-  const { isScanning, startScan } = useScan();
+  const { isScanning, startScan, stopScan, onScanCancel } = useScan();
+  const lastBackPressed = React.useRef<number | null>(null);
+
+  React.useEffect(() => {
+    const backAction = () => {
+      if (isScanning) {
+        if (onScanCancel) {
+          onScanCancel();
+        }
+        stopScan();
+        return true;
+      }
+
+      if (currentScreen !== 'home') {
+        setCurrentScreen('home');
+        return true;
+      }
+
+      if (
+        lastBackPressed.current &&
+        lastBackPressed.current + 2000 >= Date.now()
+      ) {
+        BackHandler.exitApp();
+        return true;
+      }
+
+      lastBackPressed.current = Date.now();
+      ToastAndroid.show('再按一次退出应用', ToastAndroid.SHORT);
+      return true;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction
+    );
+
+    return () => backHandler.remove();
+  }, [currentScreen, isScanning, onScanCancel, stopScan]);
 
   // 按照小程序源码的TabBar配置
   const leftTabs = [
