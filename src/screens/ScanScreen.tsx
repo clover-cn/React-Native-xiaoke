@@ -51,10 +51,12 @@ const ScanScreen: React.FC = () => {
       {/* 相机组件 */}
       <Camera
         style={styles.camera}
-        cameraType={CameraType.Back}
+        cameraType={CameraType.Back} // 相机类型，前置或后置
         onReadCode={(event) => onSuccess({ data: event.nativeEvent.codeStringValue })}
-        scanBarcode={true}
-        showFrame={true}
+        scanBarcode={true} // 是否扫描二维码
+        showFrame={true} // 是否显示扫描框
+        barcodeFrameSize={{ width: 250, height: 250 }} // 扫描框大小
+        scanThrottleDelay={1000} // 扫描间隔，单位毫秒
         frameColor="#FF6B35"
         laserColor="#FF6B35"
       />
