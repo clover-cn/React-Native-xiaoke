@@ -194,7 +194,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ scanResult, onScanResultReceive
         />
 
         {/* 轮播图 - 绝对定位压在背景图上 */}
-        <View style={[styles.bannerOverlay, { top: insets.top + 44 }]}>
+        <View style={[styles.bannerOverlay, { top: insets.top + 60 }]}>
           <BannerCarousel
             data={Images.bannerImage}
             onPress={(item, index) => {
@@ -462,6 +462,7 @@ const styles = StyleSheet.create({
     height: 32,
     marginHorizontal: 20,
     marginBottom: 10,
+    marginTop: 20,
     borderRadius: 8,
     color:'#FF7E38',
     backgroundColor: '#FFF5F0',
