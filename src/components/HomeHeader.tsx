@@ -8,6 +8,7 @@ import {
   StatusBar,
   Dimensions,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import CustomHeader from './CustomHeader';
 
 const { width } = Dimensions.get('window');
@@ -30,6 +31,8 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
   statusBarBgColor,
   statusBarOverlayOpacity,
 }) => {
+  const insets = useSafeAreaInsets();
+
   return (
     <CustomHeader
       backgroundImage={require('../../assets/images/img_home_bg1.png')}
@@ -42,7 +45,7 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
     >
       {/* 完全自定义首页Header内容 - 使用绝对定位紧贴状态栏 */}
       <TouchableOpacity
-        style={styles.titleBar}
+        style={[styles.titleBar, { top: insets.top }]} // 使用 insets.top 动态设置 top 值
         onPress={onTitlePress}
         activeOpacity={0.7}
       >
@@ -67,7 +70,6 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({
 const styles = StyleSheet.create({
   titleBar: {
     position: 'absolute',         // 绝对定位
-    top: 20,                       // 紧贴导航栏内容区域顶部
     left: 0,
     right: 0,
     flexDirection: 'row',

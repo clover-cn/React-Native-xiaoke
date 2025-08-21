@@ -9,6 +9,7 @@ import {
   Dimensions,
   StatusBar,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useTheme } from '../hooks/useTheme';
 import BannerCarousel from '../components/BannerCarousel';
@@ -29,6 +30,8 @@ const SCROLL_SWITCH_OFFSET = 80; // 超过该偏移后，切换为深色文字/�
 const HomeScreen: React.FC<HomeScreenProps> = ({ scanResult, onScanResultReceived }) => {
   const { theme } = useTheme();
   const { startScan } = useScan();
+  const insets = useSafeAreaInsets(); // 获取安全区域边距
+
   const deviceTypesData = [
     {
       id: '1',
@@ -74,36 +77,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ scanResult, onScanResultReceive
       },
       {
         id: '4',
-        name: '洗衣机',
-        address:'1栋 1层 1-1房间'
-      },
-      {
-        id: '5',
-        name: '洗衣机',
-        address:'1栋 1层 1-1房间'
-      },
-      {
-        id: '6',
-        name: '洗衣机',
-        address:'1栋 1层 1-1房间'
-      },
-      {
-        id: '7',
-        name: '洗衣机',
-        address:'1栋 1层 1-1房间'
-      },
-      {
-        id: '8',
-        name: '洗衣机',
-        address:'1栋 1层 1-1房间'
-      },
-      {
-        id: '9',
-        name: '洗衣机',
-        address:'1栋 1层 1-1房间'
-      },
-      {
-        id: '10',
         name: '洗衣机',
         address:'1栋 1层 1-1房间'
       },
@@ -221,7 +194,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ scanResult, onScanResultReceive
         />
 
         {/* 轮播图 - 绝对定位压在背景图上 */}
-        <View style={styles.bannerOverlay}>
+        <View style={[styles.bannerOverlay, { top: insets.top + 44 }]}>
           <BannerCarousel
             data={Images.bannerImage}
             onPress={(item, index) => {
@@ -360,7 +333,6 @@ const styles = StyleSheet.create({
   },
   bannerOverlay: {
     position: 'absolute',
-    top: 70, // 调整这个值来控制轮播图在背景图上的位置
     left: 20,
     right: 20,
     zIndex: 1001, // 确保轮播图在背景图上方

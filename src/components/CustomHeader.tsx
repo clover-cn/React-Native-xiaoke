@@ -9,11 +9,10 @@ import {
   Dimensions,
   ImageSourcePropType,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
-// 获取状态栏高度（简化版本，实际项目建议使用react-native-safe-area-context）
-const STATUS_BAR_HEIGHT = StatusBar.currentHeight || 44;
 const NAV_BAR_HEIGHT = 200;
 
 interface CustomHeaderProps {
@@ -55,8 +54,11 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
   statusBarBgColor = 'transparent',
   statusBarOverlayOpacity = 0, // 默认透明
 }) => {
-  const totalHeight = STATUS_BAR_HEIGHT + NAV_BAR_HEIGHT;
-  const containerPaddingTop = contentStartFromStatusBar ? 0 : STATUS_BAR_HEIGHT;
+  const insets = useSafeAreaInsets();
+  const statusBarHeight = insets.top; // 使用 safe area 的顶部距离作为状态栏高度
+
+  const totalHeight = statusBarHeight + NAV_BAR_HEIGHT;
+  const containerPaddingTop = contentStartFromStatusBar ? 0 : statusBarHeight;
 
   return (
     <>
@@ -72,18 +74,18 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
         {backgroundImage && (
           <Image
             source={backgroundImage}
-            style={[styles.backgroundImage, { height: totalHeight + STATUS_BAR_HEIGHT }]}
+            style={[styles.backgroundImage, { height: totalHeight + statusBarHeight }]}
             resizeMode={backgroundImageResizeMode}
           />
         )}
 
         {/* 背景色 - 覆盖整个区域包括状态栏 */}
         {!backgroundImage && (
-          <View style={[styles.backgroundView, { backgroundColor, height: totalHeight }]} />
+          <View style={[styles.backgroundView, { backgroundColor, height: totalHeight, top: -statusBarHeight }]} />
         )}
 
         {/* 顶部状态栏区域的覆盖色（避免透明时文字不可见） */}
-        <View style={[styles.statusBarOverlay, { backgroundColor: statusBarBgColor, opacity: statusBarOverlayOpacity }]} />
+        <View style={[styles.statusBarOverlay, { backgroundColor: statusBarBgColor, opacity: statusBarOverlayOpacity, height: statusBarHeight }]} />
 
         {/* 导航栏内容 */}
         <View style={styles.navBar}>
@@ -152,13 +154,12 @@ const styles = StyleSheet.create({
   },
   backgroundImage: {
     position: 'absolute',
-    top: -STATUS_BAR_HEIGHT, // 向上延伸到状态栏
+    top: 0, // 背景图从容器顶部开始
     left: 0,
     width: '100%',
   },
   backgroundView: {
     position: 'absolute',
-    top: -STATUS_BAR_HEIGHT, // 向上延伸到状态栏
     left: 0,
     width: '100%',
   },
@@ -167,7 +168,6 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: STATUS_BAR_HEIGHT,
   },
   navBar: {
     height: NAV_BAR_HEIGHT,
