@@ -15,17 +15,20 @@ import BannerCarousel from '../components/BannerCarousel';
 import HomeHeader from '../components/HomeHeader';
 import { Images } from '../assets/images';
 import LinearGradient from 'react-native-linear-gradient'; // 导入 LinearGradient
+import { useScan } from '../contexts/ScanContext';
 const { width } = Dimensions.get('window');
 const COMMON_IMG_ASPECT_RATIO = 106 / 670; // 图片实际宽高比
 const calculatedImageHeight = (width - 40) * COMMON_IMG_ASPECT_RATIO;
 interface HomeScreenProps {
-  // 为将来的导航或其他props预留
+  scanResult?: string;
+  onScanResultReceived?: () => void;
 }
 
 const SCROLL_SWITCH_OFFSET = 80; // 超过该偏移后，切换为深色文字/白底
 
-const HomeScreen: React.FC<HomeScreenProps> = () => {
+const HomeScreen: React.FC<HomeScreenProps> = ({ scanResult, onScanResultReceived }) => {
   const { theme } = useTheme();
+  const { startScan } = useScan();
   const deviceTypesData = [
     {
       id: '1',
@@ -160,6 +163,39 @@ const HomeScreen: React.FC<HomeScreenProps> = () => {
   const handleMessagePress = (message: any) => {
     console.log('消息被点击:', message);
     // 这里可以打开消息详情
+  };
+
+  // 启动扫码的函数
+  const startScanFromHome = () => {
+    console.log('从首页启动扫码');
+    startScan(
+      (data: string) => {
+        console.log('首页内部扫码结果:', data);
+        handleScanResult(data);
+      },
+      () => {
+        console.log('扫码取消');
+      }
+    );
+  };
+
+  // 处理从外部传入的扫码结果
+  useEffect(() => {
+    if (scanResult) {
+      console.log('首页接收到外部扫码结果:', scanResult);
+      // 处理扫码结果，但不再次启动扫码
+      handleScanResult(scanResult);
+      if (onScanResultReceived) {
+        onScanResultReceived();
+      }
+    }
+  }, [scanResult]);
+
+  // 处理扫码结果的函数
+  const handleScanResult = (data: string) => {
+    console.log('处理扫码结果:', data);
+    // 这里可以根据扫码结果进行相应的处理
+    // 比如跳转到相应设备、显示结果等
   };
 
   return (

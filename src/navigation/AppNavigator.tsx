@@ -5,14 +5,17 @@ import HomeScreen from '../screens/HomeScreen';
 import ChargeScreen from '../screens/ChargeScreen';
 import HelpScreen from '../screens/HelpScreen';
 import MyScreen from '../screens/MyScreen';
+import ScanScreen from '../screens/ScanScreen';
 import TabBar from '../components/TabBar';
 import { TabBarImages } from '../assets/tabBarImages';
+import { ScanProvider, useScan } from '../contexts/ScanContext';
+type Screen = 'home' | 'charge' | 'help' | 'my';
 
-type Screen = 'home' | 'charge' | 'scan' | 'help' | 'my';
-
-const AppNavigator: React.FC = () => {
+const AppNavigatorContent: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
+  const [scanResult, setScanResult] = useState<string | undefined>();
   const { theme } = useTheme();
+  const { isScanning, startScan } = useScan();
 
   // 按照小程序源码的TabBar配置
   const leftTabs = [
@@ -52,24 +55,43 @@ const AppNavigator: React.FC = () => {
   const renderScreen = () => {
     switch (currentScreen) {
       case 'home':
-        return <HomeScreen />;
+        return (
+          <HomeScreen
+            scanResult={scanResult}
+            onScanResultReceived={() => setScanResult(undefined)}
+          />
+        );
       case 'charge':
         return <ChargeScreen />;
-      case 'scan':
-        return <HomeScreen />; // 扫码功能暂时显示首页
       case 'help':
         return <HelpScreen />;
       case 'my':
         return <MyScreen />;
       default:
-        return <HomeScreen />;
+        return (
+          <HomeScreen
+            scanResult={scanResult}
+            onScanResultReceived={() => setScanResult(undefined)}
+          />
+        );
     }
   };
 
   const handleTabPress = (tabKey: string, index: string) => {
     if (index === '5') {
-      // 扫码功能
-      console.log('扫码');
+      // 启动扫码功能
+      startScan(
+        (data: string) => {
+          // 将扫码结果传递给首页
+          setScanResult(data);
+          // 确保当前在首页
+          setCurrentScreen('home');
+        },
+        () => {
+          console.log('扫码取消');
+          // 扫码取消的处理
+        }
+      );
       return;
     }
     setCurrentScreen(tabKey as Screen);
@@ -80,13 +102,32 @@ const AppNavigator: React.FC = () => {
       <View style={styles.screen}>
         {renderScreen()}
       </View>
-      <TabBar
-        leftTabs={leftTabs}
-        rightTabs={rightTabs}
-        activeTab={currentScreen}
-        onTabPress={handleTabPress}
-      />
+      {/* 只有在非扫码状态下才显示 TabBar */}
+      {!isScanning && (
+        <TabBar
+          leftTabs={leftTabs}
+          rightTabs={rightTabs}
+          activeTab={currentScreen}
+          onTabPress={handleTabPress}
+        />
+      )}
+
+      {/* 扫码界面作为全屏覆盖层 */}
+      {isScanning && (
+        <View style={styles.scanOverlay}>
+          <ScanScreen />
+        </View>
+      )}
     </View>
+  );
+};
+
+// 主导航组件，包装了 ScanProvider
+const AppNavigator: React.FC = () => {
+  return (
+    <ScanProvider>
+      <AppNavigatorContent />
+    </ScanProvider>
   );
 };
 
@@ -96,6 +137,15 @@ const styles = StyleSheet.create({
   },
   screen: {
     flex: 1,
+  },
+  scanOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1000,
+    backgroundColor: '#000',
   },
 });
 
