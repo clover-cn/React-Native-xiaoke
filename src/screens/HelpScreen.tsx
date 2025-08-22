@@ -51,17 +51,20 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   titleBar: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
+    // =============方案一
+    // position: 'absolute',
+    // top: 20,
+    // left: 0,
+    // right: 0,
+    // =============方案二
+    flex: 1,
+    marginTop: 20,
+    height: 48,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 8,
-    zIndex: 10,
-    backgroundColor: 'red',
+    backgroundColor: 'pink',
   },
   titleXm: {
     fontSize: 18,
