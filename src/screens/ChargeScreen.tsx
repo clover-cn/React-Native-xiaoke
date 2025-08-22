@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -17,7 +17,21 @@ const { width } = Dimensions.get('window');
 const STATUS_BAR_HEIGHT = StatusBar.currentHeight || 44;
 const ChargeScreen: React.FC = () => {
   const { theme } = useTheme();
+  const [selectedAmount, setSelectedAmount] = useState('0.02'); // 默认充值金额
+  const [selectedId, setSelectedId] = useState<number>(1); // 选中的项目ID
 
+  const moneyList = [
+    { id: 1, amount: '0.02' },
+    { id: 2, amount: '20' },
+    { id: 3, amount: '30' },
+    { id: 4, amount: '40' },
+  ];
+
+  const calculateAmount = (item: any) => {
+    console.log('选中的金额:', item);
+    setSelectedAmount(item.amount);
+    setSelectedId(item.id);
+  };
   return (
     <View style={[styles.container, { backgroundColor: '#f5f5f5' }]}>
       {/* 顶部标题栏 - 使用背景图片 */}
@@ -38,7 +52,7 @@ const ChargeScreen: React.FC = () => {
         <View style={styles.balanceInfo}>
           <Text style={[{ color: '#FFF' }]}>充值金额</Text>
           <Text style={styles.balanceMoney}>
-            <Text style={[{ fontWeight: 'normal', fontSize: 18 }]}>￥</Text>0.01
+            <Text style={[{ fontWeight: 'normal', fontSize: 18 }]}>￥</Text>{selectedAmount}
           </Text>
         </View>
       </CustomHeader>
@@ -52,20 +66,24 @@ const ChargeScreen: React.FC = () => {
 
         {/* 金额选择网格 */}
         <View style={styles.amountGrid}>
-          <TouchableOpacity
-            style={[styles.amountButton, styles.selectedAmount]}
-          >
-            <Text style={styles.selectedAmountText}>¥0.01</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.amountButton}>
-            <Text style={styles.amountText}>¥20</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.amountButton}>
-            <Text style={styles.amountText}>¥30</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.amountButton}>
-            <Text style={styles.amountText}>¥40</Text>
-          </TouchableOpacity>
+          {moneyList.map(item => (
+            <TouchableOpacity
+              key={item.id}
+              style={[
+                styles.amountButton,
+                selectedId === item.id && styles.selectedAmount,
+              ]}
+              onPress={() => calculateAmount(item)}
+            >
+              <Text
+                style={
+                  selectedId === item.id ? styles.selectedAmountText : styles.amountText
+                }
+              >
+                ¥{item.amount}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
         {/* 充值说明 */}
