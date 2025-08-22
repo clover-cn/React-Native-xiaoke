@@ -152,6 +152,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 40,
     borderTopRightRadius: 40,
     backgroundColor: '#FFFFFF',
+    height: '100%',
   },
   balanceCard: {
     width: width - 40,

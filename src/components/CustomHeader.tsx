@@ -24,6 +24,7 @@ interface CustomHeaderProps {
   backgroundColor?: string;
   titleColor?: string;
   showBackButton?: boolean;
+  navHeight?: number; // 导航栏高度，默认为 200
   onLeftPress?: () => void;
   onRightPress?: () => void;
   onTitlePress?: () => void;
@@ -44,6 +45,7 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
   backgroundColor = '#FF6B35',
   titleColor = '#ffffff',
   showBackButton = false,
+  navHeight = NAV_BAR_HEIGHT,
   onLeftPress,
   onRightPress,
   onTitlePress,
@@ -57,7 +59,7 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
   const insets = useSafeAreaInsets();
   const statusBarHeight = insets.top; // 使用 safe area 的顶部距离作为状态栏高度
 
-  const totalHeight = statusBarHeight + NAV_BAR_HEIGHT;
+  const totalHeight = statusBarHeight + navHeight;
   const containerPaddingTop = contentStartFromStatusBar ? 0 : statusBarHeight;
 
   return (
@@ -88,7 +90,7 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
         <View style={[styles.statusBarOverlay, { backgroundColor: statusBarBgColor, opacity: statusBarOverlayOpacity, height: statusBarHeight }]} />
 
         {/* 导航栏内容 */}
-        <View style={styles.navBar}>
+        <View style={[styles.navBar, { height: navHeight }]}>
           {children ? (
             // 完全自定义内容
             children
@@ -170,7 +172,6 @@ const styles = StyleSheet.create({
     right: 0,
   },
   navBar: {
-    height: NAV_BAR_HEIGHT,
     flexDirection: 'row',
     alignItems: 'center',
     // paddingHorizontal: 16,
