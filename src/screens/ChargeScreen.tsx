@@ -8,6 +8,7 @@ import {
   Image,
   Dimensions,
   StatusBar,
+  ImageBackground,
 } from 'react-native';
 import { useTheme } from '../hooks/useTheme';
 import CustomHeader from '../components/CustomHeader';
@@ -44,17 +45,16 @@ const ChargeScreen: React.FC = () => {
         <TouchableOpacity style={styles.titleBar} activeOpacity={0.7}>
           <Text style={styles.titleXm}>充值</Text>
         </TouchableOpacity>
-        <Image
+        <ImageBackground
           style={styles.balanceCard}
           source={require('../../assets/images/img_zhye.png')}
           resizeMode="contain"
-        />
-        <View style={styles.balanceInfo}>
+        >
           <Text style={[{ color: '#FFF' }]}>充值金额</Text>
           <Text style={styles.balanceMoney}>
             <Text style={[{ fontWeight: 'normal', fontSize: 18 }]}>￥</Text>{selectedAmount}
           </Text>
-        </View>
+        </ImageBackground>
       </CustomHeader>
 
       <View style={styles.scrollContent}>
@@ -158,6 +158,8 @@ const styles = StyleSheet.create({
     height: 120,
     marginTop: 40,
     marginHorizontal: 20,
+    justifyContent: 'center',
+    paddingLeft: 40,
   },
 
   sectionHeader: {
@@ -259,12 +261,6 @@ const styles = StyleSheet.create({
   otherChargeText: {
     fontSize: 14,
     color: '#666',
-  },
-  balanceInfo: {
-    position: 'absolute',
-    // top: 0,
-    left: 40,
-    alignItems: 'stretch',
   },
   balanceMoney: {
     color: '#FFF',
