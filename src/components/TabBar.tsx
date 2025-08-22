@@ -161,14 +161,16 @@ const styles = StyleSheet.create({
     marginLeft: -30, // 负的宽度的一半来居中
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 4,
-    shadowColor: '#000',
+    // Android 阴影效果
+    elevation: 15,
+    // iOS 阴影效果 - 四周都有阴影
+    shadowColor: '#000000',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 0, // 设为0让阴影四周扩散
     },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
+    shadowOpacity: 0.5,
+    shadowRadius: 15,
   },
   scanIcon: {
     width: 36, // 72rpx converted to dp

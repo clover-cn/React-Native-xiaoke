@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useTheme } from '../hooks/useTheme';
 import CustomHeader from '../components/CustomHeader';
+import LinearGradient from 'react-native-linear-gradient'; // 渐变库
 const { width } = Dimensions.get('window');
 // 获取状态栏高度
 const STATUS_BAR_HEIGHT = StatusBar.currentHeight || 44;
@@ -34,11 +35,15 @@ const ChargeScreen: React.FC = () => {
           source={require('../../assets/images/img_zhye.png')}
           resizeMode="contain"
         />
+        <View style={styles.balanceInfo}>
+          <Text style={[{ color: '#FFF' }]}>充值金额</Text>
+          <Text style={styles.balanceMoney}>
+            <Text style={[{ fontWeight: 'normal', fontSize: 18 }]}>￥</Text>0.01
+          </Text>
+        </View>
       </CustomHeader>
 
-      <View
-        style={styles.scrollContent}
-      >
+      <View style={styles.scrollContent}>
         {/* 选择金额标题 */}
         <View style={styles.sectionHeader}>
           <View style={styles.redLine} />
@@ -75,8 +80,16 @@ const ChargeScreen: React.FC = () => {
         </View>
 
         {/* 确认支付按钮 */}
-        <TouchableOpacity style={styles.payButton}>
-          <Text style={styles.payButtonText}>确认支付</Text>
+        <TouchableOpacity style={styles.payButtonContainer}>
+          <LinearGradient
+            colors={['#FF510A', '#FE8F0A']} // 对应的起始和结束颜色
+            locations={[0.03, 1.0]} // 对应 3% 和 100%
+            start={{ x: 0, y: 0.5 }} // 渐变开始点：左上角
+            end={{ x: 1, y: 0.5 }} // 渐变结束点：左下角 (从上到下)
+            style={styles.payButton}
+          >
+            <Text style={styles.payButtonText}>确认支付</Text>
+          </LinearGradient>
         </TouchableOpacity>
 
         {/* 为他人下充值 */}
@@ -154,26 +167,24 @@ const styles = StyleSheet.create({
   amountButton: {
     width: (width - 60) / 2,
     height: 50,
-    backgroundColor: '#fff',
-    borderRadius: 8,
+    backgroundColor: '#FFEFE6',
+    borderRadius: 15,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 15,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
   },
   selectedAmount: {
     backgroundColor: '#FF6B35',
   },
   amountText: {
-    fontSize: 16,
-    color: '#333',
-    fontWeight: '500',
+    fontSize: 18,
+    color: '#FF600A',
+    fontWeight: 'bold',
   },
   selectedAmountText: {
-    fontSize: 16,
+    fontSize: 18,
     color: '#fff',
-    fontWeight: '500',
+    fontWeight: 'bold',
   },
   noteSection: {
     marginBottom: 30,
@@ -197,13 +208,25 @@ const styles = StyleSheet.create({
     color: '#666',
     lineHeight: 18,
   },
+  payButtonContainer: {
+    marginBottom: 20,
+    marginHorizontal: 5, // 为阴影留出空间
+    borderRadius: 25,
+    // iOS 阴影效果
+    shadowColor: '#000000',
+    shadowOpacity: 0.5,
+    shadowOffset: { width: 0, height: 8 },
+    shadowRadius: 15,
+    // Android 阴影效果
+    elevation: 15,
+    // 确保背景色不干扰阴影
+    backgroundColor: 'transparent',
+  },
   payButton: {
-    backgroundColor: '#FF6B35',
     height: 50,
     borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
   },
   payButtonText: {
     fontSize: 16,
@@ -218,6 +241,17 @@ const styles = StyleSheet.create({
   otherChargeText: {
     fontSize: 14,
     color: '#666',
+  },
+  balanceInfo: {
+    position: 'absolute',
+    // top: 0,
+    left: 40,
+    alignItems: 'stretch',
+  },
+  balanceMoney: {
+    color: '#FFF',
+    fontSize: 24,
+    fontWeight: 'bold',
   },
 });
 
