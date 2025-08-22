@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: -30,
     left: 0,
-    zIndex: 999,
+    zIndex: 9999,
     width: '100%',
   },
   tabbarNav: {

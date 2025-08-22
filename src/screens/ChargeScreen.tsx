@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     position: 'absolute',
     top: STATUS_BAR_HEIGHT + 20 + 120, // 顶部状态栏高度 + 标题栏高度
-    zIndex: 9999,
+    zIndex: 1000,
     padding: 20,
     borderTopLeftRadius: 40,
     borderTopRightRadius: 40,
