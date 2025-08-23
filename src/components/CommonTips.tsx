@@ -3,7 +3,7 @@ import { View, Text, Image, StyleSheet, Dimensions } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
-// Responsive scaling based on a design width (e.g., 750px)
+// 基于设计宽度（例如750px）的响应式缩放
 const rpx = (px: number) => {
   return (width / 750) * px;
 };
