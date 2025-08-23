@@ -14,6 +14,7 @@ import { useTheme } from '../hooks/useTheme';
 import CustomHeader from '../components/CustomHeader';
 import LinearGradient from 'react-native-linear-gradient'; // 渐变库
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import CommonTips from '../components/CommonTips';
 const { width } = Dimensions.get('window');
 // 获取状态栏高度
 const STATUS_BAR_HEIGHT = StatusBar.currentHeight || 44;
@@ -89,13 +90,22 @@ const ChargeScreen: React.FC = () => {
 
         {/* 充值说明 */}
         <View style={styles.noteSection}>
-          <View style={styles.noteHeader}>
+          {/* <View style={styles.noteHeader}>
             <Text style={styles.noteIcon}>💡</Text>
             <Text style={styles.noteTitle}>充值说明</Text>
           </View>
           <Text style={styles.noteText}>
             1. 如有疑问，可可直接与客服人员电话沟通"18117830256"
-          </Text>
+          </Text> */}
+          <CommonTips
+            commonTips={{
+              title: '充值说明',
+              content: [
+                '如有疑问，可可直接与客服人员电话沟通"18117830256"',
+                '充值成功后，余额会实时到账，请注意查收',
+              ],
+            }}
+          />
         </View>
 
         {/* 确认支付按钮 */}
