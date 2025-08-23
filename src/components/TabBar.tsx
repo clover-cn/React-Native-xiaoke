@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     // Android 阴影效果
-    elevation: 15,
+    elevation: 10,
     // iOS 阴影效果 - 四周都有阴影
     shadowColor: '#000000',
     shadowOffset: {

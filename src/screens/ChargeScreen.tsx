@@ -13,6 +13,7 @@ import {
 import { useTheme } from '../hooks/useTheme';
 import CustomHeader from '../components/CustomHeader';
 import LinearGradient from 'react-native-linear-gradient'; // 渐变库
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 const { width } = Dimensions.get('window');
 // 获取状态栏高度
 const STATUS_BAR_HEIGHT = StatusBar.currentHeight || 44;
@@ -20,7 +21,7 @@ const ChargeScreen: React.FC = () => {
   const { theme } = useTheme();
   const [selectedAmount, setSelectedAmount] = useState('0.02'); // 默认充值金额
   const [selectedId, setSelectedId] = useState<number>(1); // 选中的项目ID
-
+  const insets = useSafeAreaInsets(); // 获取安全区域边距
   const moneyList = [
     { id: 1, amount: '0.02' },
     { id: 2, amount: '20' },
@@ -42,11 +43,11 @@ const ChargeScreen: React.FC = () => {
         statusBarTranslucent={true}
         statusBarStyle="dark-content"
       >
-        <TouchableOpacity style={styles.titleBar} activeOpacity={0.7}>
+        <TouchableOpacity style={[styles.titleBar, { top: insets.top }]} activeOpacity={0.7}>
           <Text style={styles.titleXm}>充值</Text>
         </TouchableOpacity>
         <ImageBackground
-          style={styles.balanceCard}
+          style={[styles.balanceCard, { marginTop: insets.top + 40 }]}
           source={require('../../assets/images/img_zhye.png')}
           resizeMode="contain"
         >
@@ -125,7 +126,6 @@ const styles = StyleSheet.create({
   },
   titleBar: {
     position: 'absolute',
-    top: 20,
     left: 0,
     right: 0,
     flexDirection: 'row',
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
   balanceCard: {
     width: width - 40,
     height: 120,
-    marginTop: 40,
+    // marginTop: 40,
     marginHorizontal: 20,
     justifyContent: 'center',
     paddingLeft: 40,
