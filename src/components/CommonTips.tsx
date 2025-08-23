@@ -89,12 +89,13 @@ const styles = StyleSheet.create({
     color: '#0177fb',
     backgroundColor: 'rgba(1, 119, 251, 0.1)',
     marginRight: rpx(12),
-    overflow: 'hidden', // Ensures the background respects the border radius on Android
+    overflow: 'hidden'
   },
   set_warp_desc_content_item_right: {
     color: '#677c93',
     lineHeight: rpx(32),
-    flexShrink: 1, // Allow text to wrap
+    flex: 1,
+    fontSize: rpx(24),
   },
 });
 

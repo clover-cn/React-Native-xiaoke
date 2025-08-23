@@ -90,18 +90,11 @@ const ChargeScreen: React.FC = () => {
 
         {/* 充值说明 */}
         <View style={styles.noteSection}>
-          {/* <View style={styles.noteHeader}>
-            <Text style={styles.noteIcon}>💡</Text>
-            <Text style={styles.noteTitle}>充值说明</Text>
-          </View>
-          <Text style={styles.noteText}>
-            1. 如有疑问，可可直接与客服人员电话沟通"18117830256"
-          </Text> */}
           <CommonTips
             commonTips={{
               title: '充值说明',
               content: [
-                '如有疑问，可可直接与客服人员电话沟通"18117830256"',
+                '如有疑问，可可直接与客服人员电话沟通"18711112222"',
                 '充值成功后，余额会实时到账，请注意查收',
               ],
             }}
@@ -219,25 +212,6 @@ const styles = StyleSheet.create({
   },
   noteSection: {
     marginBottom: 30,
-  },
-  noteHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  noteIcon: {
-    fontSize: 16,
-    marginRight: 6,
-  },
-  noteTitle: {
-    fontSize: 14,
-    color: '#FF6B35',
-    fontWeight: '500',
-  },
-  noteText: {
-    fontSize: 12,
-    color: '#666',
-    lineHeight: 18,
   },
   payButtonContainer: {
     marginBottom: 20,
