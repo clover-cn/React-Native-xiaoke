@@ -11,9 +11,11 @@ import {
 import { useTheme } from '../hooks/useTheme';
 import CustomHeader from '../components/CustomHeader';
 import LinearGradient from 'react-native-linear-gradient'; // 渐变库
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 const { width } = Dimensions.get('window');
 const MyScreen: React.FC = () => {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets(); // 获取安全区域边距
   const handleTitlePress = () => {
     console.log('被点击');
   };
@@ -51,14 +53,16 @@ const MyScreen: React.FC = () => {
           </LinearGradient>
         </View>
       </CustomHeader>
-      <View style={styles.userContent}>
+      <View style={[styles.userContent, { top: insets.top + 130 }]}>
         <ImageBackground
           source={require('../../assets/images/icon_zhxx.png')}
           resizeMode="contain"
           style={styles.accountBalance}
         >
           <View style={styles.accountInfo}>
-            <Text style={{ fontWeight: 'bold' }}>账户信息</Text>
+            <Text style={{ fontWeight: 'bold', marginRight: 80 }}>
+              账户信息
+            </Text>
             <View style={styles.accountDetails}>
               <View style={styles.accountItem}>
                 <Image
@@ -75,6 +79,23 @@ const MyScreen: React.FC = () => {
                 resizeMode="contain"
                 style={{ width: 20, height: 20 }}
               />
+            </View>
+          </View>
+          <View style={styles.moneyInfo}>
+            <View style={{ alignItems: 'center' }}>
+              <Text style={{ fontWeight: 'bold', fontSize: 20 }}>
+                <Text style={{ fontWeight: 'normal', fontSize: 12 }}>￥</Text>
+                <Text>10.00</Text>
+              </Text>
+              <Text>余额</Text>
+            </View>
+            <View style={styles.line}></View>
+            <View style={{ alignItems: 'center' }}>
+              <Text style={{ fontWeight: 'bold', fontSize: 20 }}>
+                <Text style={{ fontWeight: 'normal', fontSize: 12 }}>￥</Text>
+                <Text>0</Text>
+              </Text>
+              <Text>优惠券</Text>
             </View>
           </View>
         </ImageBackground>
@@ -136,15 +157,12 @@ const styles = StyleSheet.create({
   },
   userContent: {
     position: 'absolute',
-    top: 150,
     left: 20,
     zIndex: 9999,
   },
   accountBalance: {
     width: width - 40,
     height: 150,
-    // paddingHorizontal: 20,
-    // paddingVertical: 20,
     padding: 25,
   },
   contentList: {
@@ -161,7 +179,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   accountDetails: {
-    width: '55%',
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -170,6 +188,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginRight: 15,
+  },
+  moneyInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    marginTop: 30,
+  },
+  line: {
+    width: 1,
+    height: '100%',
+    backgroundColor: '#E8E8E9',
   },
 });
 
