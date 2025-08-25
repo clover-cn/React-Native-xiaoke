@@ -33,69 +33,60 @@ const MyScreen: React.FC = () => {
       name: '完善资料',
       icon: require('../../assets/images/icon_wdzh.png'),
     },
-    {
-      name: '完善资料',
-      icon: require('../../assets/images/icon_wdzh.png'),
-    },
-    {
-      name: '完善资料',
-      icon: require('../../assets/images/icon_wdzh.png'),
-    },
-    {
-      name: '完善资料',
-      icon: require('../../assets/images/icon_wdzh.png'),
-    },
-    {
-      name: '完善资料',
-      icon: require('../../assets/images/icon_wdzh.png'),
-    },
-    {
-      name: '完善资料',
-      icon: require('../../assets/images/icon_wdzh.png'),
-    },
-    {
-      name: '完善资料',
-      icon: require('../../assets/images/icon_wdzh.png'),
-    },
   ];
+
+  // Header 和覆盖内容的布局参数
+  const NAV_BAR_HEIGHT = 200; // 与 CustomHeader 默认 navHeight 保持一致
+  const overlayTop = insets.top + 130; // 覆盖内容距离顶部偏移
+  const headerHeight = insets.top + NAV_BAR_HEIGHT; // Header 实际高度
+  const [userContentHeight, setUserContentHeight] = React.useState(0);
+  const extraPadding = Math.max(0, overlayTop + userContentHeight - headerHeight);
+
   const handleTitlePress = () => {
     console.log('被点击');
   };
   return (
     <ScrollView style={styles.container}>
-      {/* 自定义Header */}
-      <CustomHeader
-        backgroundImage={require('../../assets/images/img_my_bg.png')}
-        contentStartFromStatusBar={true}
-        statusBarTranslucent={true}
-        statusBarStyle="light-content"
-      >
-        <View style={styles.headerContent}>
-          <View style={styles.headerInfo}>
-            <Image
-              source={require('../../assets/images/img_touxian_boy.png')}
-              style={styles.headerImage}
-              resizeMode="contain"
-            />
-            <Text style={styles.headerTitle}>秦始皇</Text>
+      {/* 头部区域包装，使 Header 与覆盖内容一起滚动并参与布局高度 */}
+      <View style={[styles.headerWrapper, { height: headerHeight + extraPadding + 50 }]}>
+        {/* 自定义Header */}
+        <CustomHeader
+          backgroundImage={require('../../assets/images/img_my_bg.png')}
+          contentStartFromStatusBar={true}
+          statusBarTranslucent={true}
+          statusBarStyle="light-content"
+        >
+          <View style={styles.headerContent}>
+            <View style={styles.headerInfo}>
+              <Image
+                source={require('../../assets/images/img_touxian_boy.png')}
+                style={styles.headerImage}
+                resizeMode="contain"
+              />
+              <Text style={styles.headerTitle}>秦始皇</Text>
+            </View>
+            <LinearGradient
+              colors={['#FFD500', '#FC9D0F']} // 颜色数组
+              start={{ x: 0, y: 0.5 }} // 从左边缘中间开始
+              end={{ x: 1, y: 0.5 }} // 到右边缘中间结束
+              locations={[0.02, 1.0]} // 对应 CSS 中的 2% 和 100%
+              style={styles.consumed}
+            >
+              <Image
+                source={require('../../assets/images/icon_xmewmxz.png')}
+                style={styles.consumedImage}
+                resizeMode="contain"
+              />
+              <Text style={styles.headerSubtitle}>消费码</Text>
+            </LinearGradient>
           </View>
-          <LinearGradient
-            colors={['#FFD500', '#FC9D0F']} // 颜色数组
-            start={{ x: 0, y: 0.5 }} // 从左边缘中间开始
-            end={{ x: 1, y: 0.5 }} // 到右边缘中间结束
-            locations={[0.02, 1.0]} // 对应 CSS 中的 2% 和 100%
-            style={styles.consumed}
-          >
-            <Image
-              source={require('../../assets/images/icon_xmewmxz.png')}
-              style={styles.consumedImage}
-              resizeMode="contain"
-            />
-            <Text style={styles.headerSubtitle}>消费码</Text>
-          </LinearGradient>
-        </View>
-      </CustomHeader>
-      <View style={[styles.userContent, { top: insets.top + 130 }]}>
+        </CustomHeader>
+
+        {/* 覆盖在 Header 上的内容 */}
+        <View
+          style={[styles.userContent, { top: overlayTop }]}
+          onLayout={(e) => setUserContentHeight(e.nativeEvent.layout.height)}
+        >
         <ImageBackground
           source={require('../../assets/images/icon_zhxx.png')}
           resizeMode="contain"
@@ -159,6 +150,7 @@ const MyScreen: React.FC = () => {
           </View>
         </View>
       </View>
+      </View>
     </ScrollView>
   );
 };
@@ -170,6 +162,9 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  headerWrapper: {
+    position: 'relative',
   },
   headerContent: {
     width: '100%',
