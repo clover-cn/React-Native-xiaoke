@@ -60,7 +60,7 @@ const MyScreen: React.FC = () => {
           style={styles.accountBalance}
         >
           <View style={styles.accountInfo}>
-            <Text style={{ fontWeight: 'bold', marginRight: 80 }}>
+            <Text style={{ fontWeight: 'bold', marginRight: 60 }}>
               账户信息
             </Text>
             <View style={styles.accountDetails}>
@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   accountInfo: {
-    width: '100%',
+    marginTop: 10,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -190,14 +190,14 @@ const styles = StyleSheet.create({
     marginRight: 15,
   },
   moneyInfo: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    marginTop: 30,
   },
   line: {
     width: 1,
-    height: '100%',
+    height: 30,
     backgroundColor: '#E8E8E9',
   },
 });
