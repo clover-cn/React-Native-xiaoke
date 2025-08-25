@@ -7,6 +7,7 @@ import {
   Image,
   ImageBackground,
   Dimensions,
+  TouchableOpacity,
 } from 'react-native';
 import { useTheme } from '../hooks/useTheme';
 import CustomHeader from '../components/CustomHeader';
@@ -22,12 +23,8 @@ const MyScreen: React.FC = () => {
       icon: require('../../assets/images/icon_wdzh.png'),
     },
     {
-      name: '完善资料',
-      icon: require('../../assets/images/icon_wdzh.png'),
-    },
-    {
-      name: '完善资料',
-      icon: require('../../assets/images/icon_wdzh.png'),
+      name: '退出登录',
+      icon: require('../../assets/images/icon_qcsq.png'),
     },
   ];
 
@@ -40,6 +37,9 @@ const MyScreen: React.FC = () => {
   const TABBAR_VISIBLE_HEIGHT = 72 + insets.bottom; // 底部 TabBar 可见高度
   const handleTitlePress = () => {
     console.log('被点击');
+  };
+  const handleFunctionPress = (item: any) => {
+    console.log('功能被点击:', item);
   };
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: TABBAR_VISIBLE_HEIGHT }}>
@@ -132,7 +132,12 @@ const MyScreen: React.FC = () => {
           <Text style={{ fontWeight: 'bold', fontSize: 14 }}>常用功能</Text>
           <View style={styles.functionContainer}>
             {featureList.map((item, index) => (
-              <View key={index} style={styles.functionList}>
+              <TouchableOpacity 
+                key={index} 
+                style={styles.functionList} 
+                onPress={() => handleFunctionPress(item)}
+                activeOpacity={0.5}
+              >
                 <Image
                   source={item.icon}
                   style={{ width: 40, height: 40 }}
@@ -141,7 +146,7 @@ const MyScreen: React.FC = () => {
                 <Text style={{ color: '#636467', fontSize: 12, marginTop: 5 }}>
                   {item.name}
                 </Text>
-              </View>
+              </TouchableOpacity>
             ))}
           </View>
         </View>
