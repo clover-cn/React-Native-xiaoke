@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   Image,
   Dimensions,
-  StatusBar,
   ImageBackground,
 } from 'react-native';
 import { useTheme } from '../hooks/useTheme';
@@ -16,13 +15,16 @@ import LinearGradient from 'react-native-linear-gradient'; // 渐变库
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import CommonTips from '../components/CommonTips';
 const { width } = Dimensions.get('window');
-// 获取状态栏高度
-const STATUS_BAR_HEIGHT = StatusBar.currentHeight || 44;
+
 const ChargeScreen: React.FC = () => {
   const { theme } = useTheme();
   const [selectedAmount, setSelectedAmount] = useState('0.02'); // 默认充值金额
   const [selectedId, setSelectedId] = useState<number>(1); // 选中的项目ID
   const insets = useSafeAreaInsets(); // 获取安全区域边距
+  const TABBAR_VISIBLE_HEIGHT = 72 + insets.bottom; // 底部 TabBar 可见高度（tabbarNav 70 + secure 32 - bottom -30）
+  
+  // 动态计算覆盖距离，基于balanceCard的高度和安全区域
+  const OVERLAP_DISTANCE = 30 + insets.top;
   const moneyList = [
     { id: 1, amount: '0.02' },
     { id: 2, amount: '20' },
@@ -36,7 +38,10 @@ const ChargeScreen: React.FC = () => {
     setSelectedId(item.id);
   };
   return (
-    <View style={[styles.container, { backgroundColor: '#f5f5f5' }]}>
+    <ScrollView 
+      style={[styles.container, { backgroundColor: theme.background }]} 
+      contentContainerStyle={{ paddingBottom: TABBAR_VISIBLE_HEIGHT }}
+    >
       {/* 顶部标题栏 - 使用背景图片 */}
       <CustomHeader
         backgroundImage={require('../../assets/images/img_cz_bj.png')}
@@ -59,7 +64,7 @@ const ChargeScreen: React.FC = () => {
         </ImageBackground>
       </CustomHeader>
 
-      <View style={styles.scrollContent}>
+      <View style={[styles.scrollContent, { marginTop: -OVERLAP_DISTANCE }]}>
         {/* 选择金额标题 */}
         <View style={styles.sectionHeader}>
           <View style={styles.redLine} />
@@ -119,7 +124,7 @@ const ChargeScreen: React.FC = () => {
           <Text style={styles.otherChargeText}>为他人下充值</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </ScrollView>
   );
 };
 
@@ -146,16 +151,13 @@ const styles = StyleSheet.create({
     maxWidth: 200,
   },
   scrollContent: {
-    flex: 1,
     paddingHorizontal: 20,
-    position: 'absolute',
-    top: STATUS_BAR_HEIGHT + 20 + 120, // 顶部状态栏高度 + 标题栏高度
-    zIndex: 1000,
-    padding: 20,
+    paddingTop: 20,
     borderTopLeftRadius: 40,
     borderTopRightRadius: 40,
     backgroundColor: '#FFFFFF',
-    height: '100%',
+    position: 'relative',
+    zIndex: 1010,
   },
   balanceCard: {
     width: width - 40,
