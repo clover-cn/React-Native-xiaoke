@@ -32,6 +32,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ scanResult, onScanResultReceive
   const { startScan } = useScan();
   const insets = useSafeAreaInsets(); // 获取安全区域边距
 
+  // 底部 TabBar 遮挡处理：TabBar 组件整体高度 = tabbarNav(70) + secure(32) - tabbarBox.bottom(-30)
+  // 实际覆盖可见高度大约为 70 + 32 - 30 = 72，再加上底部安全区
+  const TABBAR_VISIBLE_HEIGHT = 72 + insets.bottom;
   const deviceTypesData = [
     {
       id: '1',
@@ -177,6 +180,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ scanResult, onScanResultReceive
       {/* 页面内容 */}
       <ScrollView
         style={styles.content}
+        contentContainerStyle={{ paddingBottom: TABBAR_VISIBLE_HEIGHT }}
         showsVerticalScrollIndicator={false}
         onScroll={onScroll}
         scrollEventThrottle={16}

@@ -29,10 +29,6 @@ const MyScreen: React.FC = () => {
       name: '完善资料',
       icon: require('../../assets/images/icon_wdzh.png'),
     },
-    {
-      name: '完善资料',
-      icon: require('../../assets/images/icon_wdzh.png'),
-    },
   ];
 
   // Header 和覆盖内容的布局参数
@@ -41,14 +37,14 @@ const MyScreen: React.FC = () => {
   const headerHeight = insets.top + NAV_BAR_HEIGHT; // Header 实际高度
   const [userContentHeight, setUserContentHeight] = React.useState(0);
   const extraPadding = Math.max(0, overlayTop + userContentHeight - headerHeight);
-
+  const TABBAR_VISIBLE_HEIGHT = 72 + insets.bottom; // 底部 TabBar 可见高度
   const handleTitlePress = () => {
     console.log('被点击');
   };
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: TABBAR_VISIBLE_HEIGHT }}>
       {/* 头部区域包装，使 Header 与覆盖内容一起滚动并参与布局高度 */}
-      <View style={[styles.headerWrapper, { height: headerHeight + extraPadding + 50 }]}>
+      <View style={[styles.headerWrapper, { height: headerHeight + extraPadding }]}>
         {/* 自定义Header */}
         <CustomHeader
           backgroundImage={require('../../assets/images/img_my_bg.png')}
