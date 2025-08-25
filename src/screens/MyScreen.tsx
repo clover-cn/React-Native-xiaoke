@@ -16,6 +16,48 @@ const { width } = Dimensions.get('window');
 const MyScreen: React.FC = () => {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets(); // 获取安全区域边距
+  const featureList = [
+    {
+      name: '完善资料',
+      icon: require('../../assets/images/icon_wdzh.png'),
+    },
+    {
+      name: '完善资料',
+      icon: require('../../assets/images/icon_wdzh.png'),
+    },
+    {
+      name: '完善资料',
+      icon: require('../../assets/images/icon_wdzh.png'),
+    },
+    {
+      name: '完善资料',
+      icon: require('../../assets/images/icon_wdzh.png'),
+    },
+    {
+      name: '完善资料',
+      icon: require('../../assets/images/icon_wdzh.png'),
+    },
+    {
+      name: '完善资料',
+      icon: require('../../assets/images/icon_wdzh.png'),
+    },
+    {
+      name: '完善资料',
+      icon: require('../../assets/images/icon_wdzh.png'),
+    },
+    {
+      name: '完善资料',
+      icon: require('../../assets/images/icon_wdzh.png'),
+    },
+    {
+      name: '完善资料',
+      icon: require('../../assets/images/icon_wdzh.png'),
+    },
+    {
+      name: '完善资料',
+      icon: require('../../assets/images/icon_wdzh.png'),
+    },
+  ];
   const handleTitlePress = () => {
     console.log('被点击');
   };
@@ -100,7 +142,21 @@ const MyScreen: React.FC = () => {
           </View>
         </ImageBackground>
         <View style={styles.contentList}>
-          <Text>这是列表区域</Text>
+          <Text style={{ fontWeight: 'bold', fontSize: 14 }}>常用功能</Text>
+          <View style={styles.functionContainer}>
+            {featureList.map((item, index) => (
+              <View key={index} style={styles.functionList}>
+                <Image
+                  source={item.icon}
+                  style={{ width: 40, height: 40 }}
+                  resizeMode="contain"
+                />
+                <Text style={{ color: '#636467', fontSize: 12, marginTop: 5 }}>
+                  {item.name}
+                </Text>
+              </View>
+            ))}
+          </View>
         </View>
       </View>
     </ScrollView>
@@ -169,7 +225,7 @@ const styles = StyleSheet.create({
     width: width - 40,
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
-    padding: 10,
+    padding: 20,
     marginTop: 10,
   },
   accountInfo: {
@@ -199,6 +255,18 @@ const styles = StyleSheet.create({
     width: 1,
     height: 30,
     backgroundColor: '#E8E8E9',
+  },
+  functionContainer: {
+    marginTop: 20,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-start',
+  },
+  functionList: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '25%',
+    marginBottom: 20,
   },
 });
 
