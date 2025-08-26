@@ -25,3 +25,36 @@ export { ScanProvider, useScan } from './contexts/ScanContext';
 // Theme
 export { Colors } from './theme/colors';
 export type { Theme } from './theme/colors';
+
+// HTTP Utils
+export {
+  initHttp,
+  httpClient,
+  apiService,
+  setToken,
+  getToken,
+  clearToken,
+  configureHttp,
+  switchEnvironment,
+  requestManager,
+} from './utils/http';
+
+// Config
+export { default as envConfig } from './config/env';
+
+// Examples
+export { default as HttpExample } from './examples/HttpExample';
+
+// Types
+export type {
+  RequestConfig,
+  ResponseData,
+  RequestMethod,
+  User,
+  LoginParams,
+  LoginResponse,
+  Device,
+  ScanResult,
+  ChargeSession,
+  StartChargeParams,
+} from './utils/http';
