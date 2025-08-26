@@ -4,6 +4,7 @@ export { default as ChargeScreen } from './screens/ChargeScreen';
 export { default as HelpScreen } from './screens/HelpScreen';
 export { default as MyScreen } from './screens/MyScreen';
 export { default as ScanScreen } from './screens/ScanScreen';
+export { default as LoginScreen } from './screens/LoginScreen';
 
 // Components
 export { default as Button } from './components/Button';

@@ -14,7 +14,12 @@ import CustomHeader from '../components/CustomHeader';
 import LinearGradient from 'react-native-linear-gradient'; // 渐变库
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 const { width } = Dimensions.get('window');
-const MyScreen: React.FC = () => {
+
+interface MyScreenProps {
+  onLogout?: () => void;
+}
+
+const MyScreen: React.FC<MyScreenProps> = ({ onLogout }) => {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets(); // 获取安全区域边距
   const featureList = [
@@ -39,8 +44,14 @@ const MyScreen: React.FC = () => {
     console.log('被点击');
   };
   const handleFunctionPress = (item: any) => {
+    if (item?.name === '退出登录') {
+      // 回调给上层：退出到登录页
+      onLogout && onLogout();
+      return;
+    }
     console.log('功能被点击:', item);
   };
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: TABBAR_VISIBLE_HEIGHT }}>
       {/* 头部区域包装，使 Header 与覆盖内容一起滚动并参与布局高度 */}

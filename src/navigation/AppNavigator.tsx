@@ -6,14 +6,16 @@ import ChargeScreen from '../screens/ChargeScreen';
 import HelpScreen from '../screens/HelpScreen';
 import MyScreen from '../screens/MyScreen';
 import ScanScreen from '../screens/ScanScreen';
+import LoginScreen from '../screens/LoginScreen';
 import TabBar from '../components/TabBar';
 import { TabBarImages } from '../assets/tabBarImages';
 import { ScanProvider, useScan } from '../contexts/ScanContext';
-type Screen = 'home' | 'charge' | 'help' | 'my';
+type Screen = 'home' | 'charge' | 'help' | 'my' | 'login';
 
 const AppNavigatorContent: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [scanResult, setScanResult] = useState<string | undefined>();
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true);
   const { theme } = useTheme();
   const { isScanning, startScan, stopScan, onScanCancel } = useScan();
   const lastBackPressed = React.useRef<number | null>(null);
@@ -28,11 +30,21 @@ const AppNavigatorContent: React.FC = () => {
         return true;
       }
 
+      // 在登录页按返回：回到首页，但保持未登录状态
+      if (!isLoggedIn && currentScreen === 'login') {
+        setCurrentScreen('home');
+        setIsLoggedIn(true); // 设置为已登录状态，确保TabBar显示
+        return true;
+      }
+      console.log('======>',currentScreen);
+      
+      // 非首页：先回到首页
       if (currentScreen !== 'home') {
         setCurrentScreen('home');
         return true;
       }
 
+      // 首页：双击退出
       if (
         lastBackPressed.current &&
         lastBackPressed.current + 2000 >= Date.now()
@@ -52,7 +64,7 @@ const AppNavigatorContent: React.FC = () => {
     );
 
     return () => backHandler.remove();
-  }, [currentScreen, isScanning, onScanCancel, stopScan]);
+  }, [currentScreen, isScanning, onScanCancel, stopScan, isLoggedIn]);
 
   // 按照小程序源码的TabBar配置
   const leftTabs = [
@@ -90,6 +102,11 @@ const AppNavigatorContent: React.FC = () => {
   ];
 
   const renderScreen = () => {
+    // 未登录时，强制进入登录页
+    if (!isLoggedIn) {
+      return <LoginScreen onLogin={() => { setIsLoggedIn(true); setCurrentScreen('home'); }} />;
+    }
+
     switch (currentScreen) {
       case 'home':
         return (
@@ -103,7 +120,9 @@ const AppNavigatorContent: React.FC = () => {
       case 'help':
         return <HelpScreen />;
       case 'my':
-        return <MyScreen />;
+        return <MyScreen onLogout={() => { setIsLoggedIn(false); setCurrentScreen('login'); }} />;
+      case 'login':
+        return <LoginScreen onLogin={() => { setIsLoggedIn(true); setCurrentScreen('home'); }} />;
       default:
         return (
           <HomeScreen
@@ -139,8 +158,8 @@ const AppNavigatorContent: React.FC = () => {
       <View style={styles.screen}>
         {renderScreen()}
       </View>
-      {/* 只有在非扫码状态下才显示 TabBar */}
-      {!isScanning && (
+      {/* 未登录时不显示 TabBar */}
+      {!isScanning && isLoggedIn && (
         <TabBar
           leftTabs={leftTabs}
           rightTabs={rightTabs}
