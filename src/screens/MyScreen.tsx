@@ -227,6 +227,7 @@ const styles = StyleSheet.create({
     width: width - 40,
     height: 150,
     padding: 25,
+    justifyContent: 'space-between',
   },
   contentList: {
     width: width - 40,
@@ -236,7 +237,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   accountInfo: {
-    marginTop: 5,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
