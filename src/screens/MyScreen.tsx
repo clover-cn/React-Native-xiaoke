@@ -100,7 +100,7 @@ const MyScreen: React.FC<MyScreenProps> = ({ onLogout }) => {
           style={styles.accountBalance}
         >
           <View style={styles.accountInfo}>
-            <Text style={{ fontWeight: 'bold', marginRight: 60 }}>
+            <Text style={{ fontWeight: 'bold', marginRight: 80 }}>
               账户信息
             </Text>
             <View style={styles.accountDetails}>
@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   accountInfo: {
-    marginTop: 10,
+    marginTop: 5,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -250,7 +250,6 @@ const styles = StyleSheet.create({
   accountItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 15,
   },
   moneyInfo: {
     flex: 1,
