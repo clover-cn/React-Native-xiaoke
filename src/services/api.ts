@@ -66,58 +66,13 @@ class ApiService {
     await httpClient.post('/auth/logout');
   }
 
-  async getUserInfo(): Promise<User> {
-    const response = await httpClient.get<User>('/user/info');
-    return response.data;
-  }
-
-  async updateUserInfo(userInfo: Partial<User>): Promise<User> {
-    const response = await httpClient.put<User>('/user/info', userInfo);
-    return response.data;
-  }
-
-  // 设备相关
+  // 获取项目列表
   async getDeviceList(): Promise<Device[]> {
-    const response = await httpClient.get<Device[]>('/devices');
+    const response = await httpClient.get<Device[]>('/members/user/project/all');
     return response.data;
   }
 
-  async getDeviceById(deviceId: string): Promise<Device> {
-    const response = await httpClient.get<Device>(`/devices/${deviceId}`);
-    return response.data;
-  }
-
-  async scanDevice(qrCode: string): Promise<ScanResult> {
-    const response = await httpClient.post<ScanResult>('/devices/scan', { qrCode });
-    return response.data;
-  }
-
-  // 充电相关
-  async startCharge(params: StartChargeParams): Promise<ChargeSession> {
-    const response = await httpClient.post<ChargeSession>('/charge/start', params);
-    return response.data;
-  }
-
-  async stopCharge(sessionId: string): Promise<ChargeSession> {
-    const response = await httpClient.post<ChargeSession>(`/charge/stop/${sessionId}`);
-    return response.data;
-  }
-
-  async getChargeHistory(page: number = 1, limit: number = 20): Promise<{
-    list: ChargeSession[];
-    total: number;
-    page: number;
-    limit: number;
-  }> {
-    const response = await httpClient.get(`/charge/history?page=${page}&limit=${limit}`);
-    return response.data;
-  }
-
-  async getChargeSession(sessionId: string): Promise<ChargeSession> {
-    const response = await httpClient.get<ChargeSession>(`/charge/session/${sessionId}`);
-    return response.data;
-  }
-
+  // 示例开始
   // 使用DRS服务检查蓝牙状态
   async getBluetoothStatus(): Promise<{ status: boolean; message: string }> {
     const response = await drsClient.get('/getBluetoothStatus');
@@ -144,35 +99,8 @@ class ApiService {
     });
     return response.data;
   }
+  // 示例结束
 
-  // 获取统计数据
-  async getStatistics(): Promise<{
-    totalDevices: number;
-    onlineDevices: number;
-    totalSessions: number;
-    totalRevenue: number;
-  }> {
-    const response = await httpClient.get('/statistics');
-    return response.data;
-  }
-
-  // 获取公告列表
-  async getNotifications(): Promise<Array<{
-    id: string;
-    title: string;
-    content: string;
-    type: 'info' | 'warning' | 'error';
-    createdAt: string;
-    read: boolean;
-  }>> {
-    const response = await httpClient.get('/notifications');
-    return response.data;
-  }
-
-  // 标记公告为已读
-  async markNotificationAsRead(notificationId: string): Promise<void> {
-    await httpClient.put(`/notifications/${notificationId}/read`);
-  }
 }
 
 // 创建API服务实例
@@ -184,20 +112,9 @@ export default apiService;
 export const {
   login,
   logout,
-  getUserInfo,
-  updateUserInfo,
   getDeviceList,
-  getDeviceById,
-  scanDevice,
-  startCharge,
-  stopCharge,
-  getChargeHistory,
-  getChargeSession,
   getBluetoothStatus,
   createBackup,
   getBackupList,
-  uploadFile,
-  getStatistics,
-  getNotifications,
-  markNotificationAsRead,
+  uploadFile
 } = apiService;

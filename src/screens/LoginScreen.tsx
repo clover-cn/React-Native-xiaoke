@@ -12,7 +12,7 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import CustomHeader from '../components/CustomHeader';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
+import { setToken } from '../utils/http';
 const { width } = Dimensions.get('window');
 
 interface LoginScreenProps {
@@ -37,8 +37,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
     console.log('发送验证码');
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     console.log('登录');
+    // 模拟存储token
+    let token= 'eyJhbGciOiJIUzUxMiJ9.eyJ1c2VfZW5kIjoiTUVNQkVSX0EiLCJ1c2VyX2lkIjoxODM5MTQwOTg2MjUwMzEzNzI4LCJ1c2VyX2tleSI6IjE4MzkxNDA5ODYyNTAzMTM3MjgtNTUzNTk0ZGMtM2VjYS00NzkyLWJkYmUtNzUzNjZiZDZiMGM5IiwidXNlcm5hbWUiOiLnp6blp4vnmocifQ.YKYJMbUdL28kNuhU8wmv-AqMkZkcxp-wwHIgVxUHPFZb2mJESvn51We5MRr2KcpPIt-ZB3tGuzwFlhAyMbfPqw'
+    setToken(token)
     onLogin && onLogin();
   };
 

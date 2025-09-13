@@ -24,7 +24,7 @@ const ENV_CONFIG = {
 };
 
 // dev 开发环境 | test 测试环境 | prod 生产环境 | demo 演示环境
-const CURRENT_ENV = "test";
+const CURRENT_ENV = "dev";
 
 // 导出当前环境的变量
 const currentEnv = ENV_CONFIG[CURRENT_ENV];

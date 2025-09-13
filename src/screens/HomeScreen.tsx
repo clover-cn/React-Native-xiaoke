@@ -17,6 +17,7 @@ import HomeHeader from '../components/HomeHeader';
 import { Images } from '../assets/images';
 import LinearGradient from 'react-native-linear-gradient'; // 导入 LinearGradient
 import { useScan } from '../contexts/ScanContext';
+import apiService, { User, Device, LoginParams } from '../services/api';
 const { width } = Dimensions.get('window');
 const COMMON_IMG_ASPECT_RATIO = 106 / 670; // 图片实际宽高比
 const calculatedImageHeight = (width - 40) * COMMON_IMG_ASPECT_RATIO;
@@ -27,7 +28,10 @@ interface HomeScreenProps {
 
 const SCROLL_SWITCH_OFFSET = 80; // 超过该偏移后，切换为深色文字/白底
 
-const HomeScreen: React.FC<HomeScreenProps> = ({ scanResult, onScanResultReceived }) => {
+const HomeScreen: React.FC<HomeScreenProps> = ({
+  scanResult,
+  onScanResultReceived,
+}) => {
   const { theme } = useTheme();
   const { startScan } = useScan();
   const insets = useSafeAreaInsets(); // 获取安全区域边距
@@ -63,26 +67,26 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ scanResult, onScanResultReceive
     },
   ];
   const commonDevice = [
-      {
-        id: '1',
-        name: '洗浴',
-        address:'1栋 1层 1-1房间'
-      },
-      {
-        id: '2',
-        name: '电吹风',
-        address:'1栋 1层 1-1房间'
-      },
-      {
-        id: '3',
-        name: '洗衣机',
-        address:'1栋 1层 1-1房间'
-      },
-      {
-        id: '4',
-        name: '洗衣机',
-        address:'1栋 1层 1-1房间'
-      },
+    {
+      id: '1',
+      name: '洗浴',
+      address: '1栋 1层 1-1房间',
+    },
+    {
+      id: '2',
+      name: '电吹风',
+      address: '1栋 1层 1-1房间',
+    },
+    {
+      id: '3',
+      name: '洗衣机',
+      address: '1栋 1层 1-1房间',
+    },
+    {
+      id: '4',
+      name: '洗衣机',
+      address: '1栋 1层 1-1房间',
+    },
   ];
 
   // 模拟消息数据
@@ -103,7 +107,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ scanResult, onScanResultReceive
     if (messages.length <= 1) return;
 
     const timer = setInterval(() => {
-      setCurrentIndex((prevIndex) => {
+      setCurrentIndex(prevIndex => {
         const nextIndex = prevIndex === messages.length - 1 ? 0 : prevIndex + 1;
 
         // 滚动到下一条消息
@@ -117,7 +121,24 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ scanResult, onScanResultReceive
 
     return () => clearInterval(timer);
   }, [messages.length]);
-
+  
+  // 页面加载时获取项目列表
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await apiService.getDeviceList();
+        if (cancelled) return;
+        console.log('获取项目列表', res);
+      } catch (e) {
+        if (cancelled) return;
+        console.error(e);
+      }
+    })();
+    return () => {
+      cancelled = true; // 防止卸载后 setState
+    };
+  }, []);
   // 顶部状态栏样式：在顶部使用“透明 + 浅色字”，下滑后使用“白底 + 深色字”
   // 为避免切 translucent 导致的重布局卡顿，translucent 固定 true，仅通过覆盖层透明度 + barStyle 切换
   const [isScrolled, setIsScrolled] = useState(false);
@@ -133,7 +154,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ scanResult, onScanResultReceive
   const handleTitlePress = () => {
     console.log('项目选择被点击');
     // 这里可以打开项目选择弹窗
-    commonDevice.forEach
+    commonDevice.forEach;
   };
 
   const handleMessagePress = (message: any) => {
@@ -151,7 +172,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ scanResult, onScanResultReceive
       },
       () => {
         console.log('扫码取消');
-      }
+      },
     );
   };
 
@@ -176,7 +197,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ scanResult, onScanResultReceive
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-
       {/* 页面内容 */}
       <ScrollView
         style={styles.content}
@@ -222,7 +242,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ scanResult, onScanResultReceive
             automaticallyAdjustContentInsets={false}
             scrollEnabled={false}
           >
-            {messages.map((message) => (
+            {messages.map(message => (
               <TouchableOpacity
                 key={message.id}
                 style={styles.messageItem}
@@ -268,18 +288,16 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ scanResult, onScanResultReceive
         </View>
         {/* 设备类型 */}
         <View style={styles.deviceType}>
-          {
-            deviceTypesData.map((item) => (
-              <View key={item.id} style={styles.deviceTypeText}>
-                <Image
-                  style={styles.deviceTypeImg}
-                  source={item.image}
-                  resizeMode="contain"
-                />
-                <Text>{item.name}</Text>
-              </View>
-            ))
-          }
+          {deviceTypesData.map(item => (
+            <View key={item.id} style={styles.deviceTypeText}>
+              <Image
+                style={styles.deviceTypeImg}
+                source={item.image}
+                resizeMode="contain"
+              />
+              <Text>{item.name}</Text>
+            </View>
+          ))}
         </View>
         {/* 预约 */}
         <Image
@@ -298,7 +316,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ scanResult, onScanResultReceive
             <LinearGradient
               colors={['#FE8F0A', '#FF510A']} // 对应的起始和结束颜色
               start={{ x: 0, y: 0 }} // 渐变开始点：左上角
-              end={{ x: 0, y: 1 }}   // 渐变结束点：左下角 (从上到下)
+              end={{ x: 0, y: 1 }} // 渐变结束点：左下角 (从上到下)
               locations={[0.03, 1.0]} // 对应 3% 和 100%
               style={styles.line}
             />
@@ -306,22 +324,23 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ scanResult, onScanResultReceive
           </View>
         </View>
         <View style={styles.commonList}>
-          {
-            commonDevice.map((device,index) => (
-              <View style={[styles.List, index !== 0 && {marginTop:10}]} key={device.id}>
-                  <View style={styles.itemList}>
-                    <Image
-                      style={styles.ListIcon}
-                      source={require('../../assets/images/icon_dingwei.png')}
-                      resizeMode="contain"
-                    />
-                    <Text>{device.name}</Text>
-                  </View>
-                  <Text>{device.address}</Text>
-                  <Text style={styles.usageText}>使用</Text>
+          {commonDevice.map((device, index) => (
+            <View
+              style={[styles.List, index !== 0 && { marginTop: 10 }]}
+              key={device.id}
+            >
+              <View style={styles.itemList}>
+                <Image
+                  style={styles.ListIcon}
+                  source={require('../../assets/images/icon_dingwei.png')}
+                  resizeMode="contain"
+                />
+                <Text>{device.name}</Text>
               </View>
-            ))
-          }
+              <Text>{device.address}</Text>
+              <Text style={styles.usageText}>使用</Text>
+            </View>
+          ))}
         </View>
       </ScrollView>
     </View>
@@ -345,7 +364,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     alignItems: 'center',
     flexDirection: 'row',
-    gap: 12
+    gap: 12,
   },
   subtitle: {
     fontSize: 16,
@@ -379,7 +398,7 @@ const styles = StyleSheet.create({
   },
   deviceType: {
     paddingHorizontal: 20,
-    flexDirection:'row',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 20,
   },
@@ -391,28 +410,28 @@ const styles = StyleSheet.create({
     height: 40,
   },
 
-  YUYUE:{
+  YUYUE: {
     marginTop: 20,
-    marginHorizontal:20,
+    marginHorizontal: 20,
     width: width - 40,
     height: 80,
   },
 
-  box_changyong:{
+  box_changyong: {
     position: 'relative',
     height: calculatedImageHeight,
     marginTop: 20,
   },
-  commonImg:{
+  commonImg: {
     position: 'absolute',
     top: 0,
     left: 0,
-    marginHorizontal:20,
+    marginHorizontal: 20,
     width: width - 40,
     height: calculatedImageHeight,
     padding: 20,
   },
-  common:{
+  common: {
     position: 'absolute',
     top: '50%',
     left: 40,
@@ -420,61 +439,61 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
   },
-  line:{
+  line: {
     width: 4,
     height: 15,
     borderRadius: 2,
   },
-  commonText:{
+  commonText: {
     color: '#202131',
     fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 10,
   },
-  commonList:{
+  commonList: {
     width: width - 40,
-    marginHorizontal:20,
-    paddingHorizontal:20,
+    marginHorizontal: 20,
+    paddingHorizontal: 20,
     backgroundColor: '#FFFDFA',
   },
-  ListIcon:{
+  ListIcon: {
     width: 20,
     height: 20,
     marginRight: 5,
   },
-  List:{
+  List: {
     width: '100%',
-    flexDirection:'row',
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent:'space-between',
+    justifyContent: 'space-between',
   },
-  itemList:{
+  itemList: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  usageText:{
+  usageText: {
     width: 50,
     height: 25,
-    backgroundColor:'#FF870A',
-    textAlign:'center',
+    backgroundColor: '#FF870A',
+    textAlign: 'center',
     lineHeight: 25,
     color: '#fff',
     borderRadius: 15,
   },
-  messageList:{
+  messageList: {
     width: width - 40,
     height: 32,
     marginHorizontal: 20,
     marginBottom: 20,
     marginTop: 20,
     borderRadius: 8,
-    color:'#FF7E38',
+    color: '#FF7E38',
     backgroundColor: '#FFF5F0',
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 10,
   },
-  messageIcon:{
+  messageIcon: {
     width: 20,
     height: 20,
     marginRight: 5,

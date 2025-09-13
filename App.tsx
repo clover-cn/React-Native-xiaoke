@@ -1,14 +1,27 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StyleSheet } from 'react-native';
-import {
-  SafeAreaProvider,
-  SafeAreaView,
-} from 'react-native-safe-area-context';
-import { AppNavigator, useTheme } from './src';
-
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { AppNavigator, useTheme, initHttp, configureHttp } from './src';
 function App() {
   const { theme, isDarkMode } = useTheme();
+  useEffect(() => {
+    // 初始化HTTP客户端
+    console.log('🚀 初始化应用...');
 
+    // 基础初始化
+    initHttp();
+
+    // 可选：自定义配置
+    configureHttp({
+      timeout: 15000, // 15秒超时
+      headers: {
+        'X-App-Version': '1.0.0',
+        'X-Platform': 'react-native',
+      },
+    });
+
+    console.log('✅ 应用初始化成功');
+  }, []);
   return (
     <SafeAreaProvider>
       {/* 让页面内各自控制沉浸式状态栏，去掉全局 StatusBar 覆盖 */}
