@@ -22,14 +22,14 @@ import envConfig from '../config/env';
 
 // 初始化HTTP客户端
 export const initHttp = (): void => {
-  console.log('🔧 Initializing HTTP client...');
-  console.log('🌍 Current environment:', envConfig.CURRENT_ENV);
-  console.log('🔗 Base URL:', envConfig.URL);
+  console.log('🔧 初始化Http客户端...');
+  console.log('🌍 当前环境：', envConfig.CURRENT_ENV);
+  console.log('🔗 基础URL：', envConfig.URL);
   
   // 设置拦截器
   setupInterceptors();
   
-  console.log('✅ HTTP client initialized successfully');
+  console.log('✅ HTTP客户端初始化成功');
 };
 
 // 导出常用工具
@@ -90,9 +90,9 @@ export const switchEnvironment = (env: 'dev' | 'test' | 'prod' | 'demo'): void =
     httpClient.setConfig({
       baseURL: envUrls.BASE_URL,
     });
-    console.log(`🔄 Switched to ${env} environment:`, envUrls.BASE_URL);
+    console.log(`🔄 切换到 ${env} 环境:`, envUrls.BASE_URL);
   } else {
-    console.error('❌ Invalid environment:', env);
+    console.error('❌ 无效环境:', env);
   }
 };
 

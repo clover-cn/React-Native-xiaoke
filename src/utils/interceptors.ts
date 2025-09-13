@@ -26,6 +26,8 @@ export const clearToken = (): void => {
 // 请求拦截器：添加认证token
 const authRequestInterceptor = (config: RequestConfig): RequestConfig => {
   const token = getToken();
+  console.log('获取到的 token:', token);
+  
   if (token) {
     config.headers = {
       ...config.headers,
