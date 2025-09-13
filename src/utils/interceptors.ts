@@ -1,28 +1,26 @@
 import { Alert } from 'react-native';
 import httpClient, { RequestConfig } from './request';
 
-// 存储token的key
-const TOKEN_KEY = 'user_token';
+// 使用公共封装的 storage（基于 MMKV）
+import storage from './Common';
 
-// 模拟token存储（实际项目中应该使用AsyncStorage）
-let userToken: string | null = null;
+// token 键名（局部常量，按需跨模块可提升至 Common.ts）
+const TOKEN_KEY = 'APP_AUTH_TOKEN';
 
-// 设置token
+// 设置 token（同步）
 export const setToken = (token: string): void => {
-  userToken = token;
-  // 实际项目中应该使用AsyncStorage.setItem(TOKEN_KEY, token);
+  storage.set(TOKEN_KEY, token);
 };
 
-// 获取token
+// 获取 token（同步），不存在时返回 null
 export const getToken = (): string | null => {
-  return userToken;
-  // 实际项目中应该使用AsyncStorage.getItem(TOKEN_KEY);
+  const v = storage.get(TOKEN_KEY, 'string');
+  return typeof v === 'string' ? v : null;
 };
 
-// 清除token
+// 清除 token（同步）
 export const clearToken = (): void => {
-  userToken = null;
-  // 实际项目中应该使用AsyncStorage.removeItem(TOKEN_KEY);
+  storage.delete(TOKEN_KEY);
 };
 
 // 请求拦截器：添加认证token
@@ -31,7 +29,7 @@ const authRequestInterceptor = (config: RequestConfig): RequestConfig => {
   if (token) {
     config.headers = {
       ...config.headers,
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     };
   }
   return config;
@@ -67,7 +65,9 @@ const loggingRequestInterceptor = (config: RequestConfig): RequestConfig => {
 };
 
 // 响应拦截器：处理通用响应
-const commonResponseInterceptor = async (response: Response): Promise<Response> => {
+const commonResponseInterceptor = async (
+  response: Response,
+): Promise<Response> => {
   console.log('📥 Response:', {
     url: response.url,
     status: response.status,
@@ -77,15 +77,15 @@ const commonResponseInterceptor = async (response: Response): Promise<Response> 
 
   // 克隆响应以便多次读取
   const clonedResponse = response.clone();
-  
+
   try {
     const data = await clonedResponse.json();
     console.log('📄 Response Data:', data);
-    
+
     // 处理业务错误码
     if (data.code && data.code !== 200 && data.code !== 0) {
       console.warn('⚠️ Business Error:', data.message || 'Unknown error');
-      
+
       // 根据错误码进行不同处理
       switch (data.code) {
         case 401:
@@ -171,14 +171,14 @@ export const createServiceClient = (baseURL: string) => {
   const { HttpClient } = require('./request');
   const client = new HttpClient();
   client.setConfig({ baseURL });
-  
+
   // 为特定服务添加拦截器
   client.addRequestInterceptor(loggingRequestInterceptor);
   client.addRequestInterceptor(commonRequestInterceptor);
   client.addRequestInterceptor(authRequestInterceptor);
   client.addResponseInterceptor(commonResponseInterceptor);
   client.addErrorInterceptor(errorInterceptor);
-  
+
   return client;
 };
 
