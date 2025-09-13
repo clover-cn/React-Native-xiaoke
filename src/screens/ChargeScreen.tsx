@@ -24,7 +24,7 @@ const ChargeScreen: React.FC = () => {
   const TABBAR_VISIBLE_HEIGHT = 72 + insets.bottom; // 底部 TabBar 可见高度（tabbarNav 70 + secure 32 - bottom -30）
   
   // 动态计算覆盖距离，基于balanceCard的高度和安全区域
-  const OVERLAP_DISTANCE = 30 + insets.top;
+  const OVERLAP_DISTANCE = 20 + insets.top;
   const moneyList = [
     { id: 1, amount: '0.02' },
     { id: 2, amount: '20' },

@@ -100,7 +100,7 @@ const MyScreen: React.FC<MyScreenProps> = ({ onLogout }) => {
           style={styles.accountBalance}
         >
           <View style={styles.accountInfo}>
-            <Text style={{ fontWeight: 'bold', marginRight: 80 }}>
+            <Text style={{width:'40%', fontWeight: 'bold' }}>
               账户信息
             </Text>
             <View style={styles.accountDetails}>
@@ -122,7 +122,7 @@ const MyScreen: React.FC<MyScreenProps> = ({ onLogout }) => {
             </View>
           </View>
           <View style={styles.moneyInfo}>
-            <View style={{ alignItems: 'center' }}>
+            <View style={styles.moneyColumn}>
               <Text style={{ fontWeight: 'bold', fontSize: 20 }}>
                 <Text style={{ fontWeight: 'normal', fontSize: 12 }}>￥</Text>
                 <Text>10.00</Text>
@@ -130,7 +130,7 @@ const MyScreen: React.FC<MyScreenProps> = ({ onLogout }) => {
               <Text>余额</Text>
             </View>
             <View style={styles.line}></View>
-            <View style={{ alignItems: 'center' }}>
+            <View style={styles.moneyColumn}>
               <Text style={{ fontWeight: 'bold', fontSize: 20 }}>
                 <Text style={{ fontWeight: 'normal', fontSize: 12 }}>￥</Text>
                 <Text>0</Text>
@@ -240,6 +240,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginTop: 5,
   },
   accountDetails: {
     flex: 1,
@@ -255,12 +256,18 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
+  },
+  moneyColumn: {
+    width: '45%',
+    alignItems: 'center',
   },
   line: {
     width: 1,
     height: 30,
     backgroundColor: '#E8E8E9',
+    alignSelf: 'center',
+    marginHorizontal: 10,
   },
   functionContainer: {
     marginTop: 20,
