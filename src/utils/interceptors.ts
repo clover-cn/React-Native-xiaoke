@@ -1,4 +1,4 @@
-import { Alert } from 'react-native';
+import { Alert, ToastAndroid } from 'react-native';
 import httpClient, { RequestConfig } from './request';
 
 // 使用公共封装的 storage（基于 MMKV）
@@ -70,7 +70,7 @@ const loggingRequestInterceptor = (config: RequestConfig): RequestConfig => {
 const commonResponseInterceptor = async (
   response: Response,
 ): Promise<Response> => {
-  console.log('📥 Response:', {
+  console.log('响应:', {
     url: response.url,
     status: response.status,
     statusText: response.statusText,
@@ -82,10 +82,11 @@ const commonResponseInterceptor = async (
 
   try {
     const data = await clonedResponse.json();
-    console.log('📄 Response Data:', data);
+    console.log('响应数据:', data);
 
+    // ToastAndroid.show('再按一次退出应用', ToastAndroid.SHORT);
     // 处理业务错误码
-    if (data.code && data.code !== 200 && data.code !== 0) {
+    if (data.code && data.code != 200 && data.code != 0) {
       console.warn('⚠️ Business Error:', data.message || 'Unknown error');
 
       // 根据错误码进行不同处理
@@ -103,13 +104,13 @@ const commonResponseInterceptor = async (
           Alert.alert('提示', '服务器内部错误，请稍后重试');
           break;
         default:
-          if (data.message) {
-            Alert.alert('提示', data.message);
+          if (data.message || data.msg) {
+            Alert.alert('提示', data.message || data.msg);
           }
       }
     }
   } catch (error) {
-    console.log('Response is not JSON format');
+    console.log('响应不是JSON格式');
   }
 
   return response;
@@ -117,7 +118,7 @@ const commonResponseInterceptor = async (
 
 // 错误拦截器：处理网络错误
 const errorInterceptor = async (error: Error): Promise<never> => {
-  console.error('❌ Request Error:', error);
+  console.error('❌ 请求错误:', error);
 
   let errorMessage = '网络请求失败';
 

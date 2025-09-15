@@ -37,12 +37,12 @@ const BannerCarousel: React.FC<BannerCarouselProps> = ({ data, onPress }) => {
   const startAutoPlay = () => {
     if (data && data.length > 1) {
       clearAutoPlayTimer();
-      console.log('Starting manual autoplay timer');
+      console.log('开始手动自动播放计时器');
 
       autoPlayTimerRef.current = setInterval(() => {
         setCurrentIndex((prevIndex) => {
           const nextIndex = (prevIndex + 1) % data.length;
-          console.log('Auto switching to index:', nextIndex);
+          console.log('自动切换到索引:', nextIndex);
 
           // 使用ref来滚动到下一张
           if (carouselRef.current) {
@@ -111,16 +111,16 @@ const BannerCarousel: React.FC<BannerCarouselProps> = ({ data, onPress }) => {
         pagingEnabled={true}
         snapEnabled={true}
         onSnapToItem={(index) => {
-          console.log('Carousel snapped to index:', index);
+          console.log('轮播图已对齐到索引:', index);
           setCurrentIndex(index);
         }}
         onScrollStart={() => {
-          console.log('Carousel scroll started');
+          console.log('轮播滚动开始');
           // 用户开始滑动时暂停自动播放
           clearAutoPlayTimer();
         }}
         onScrollEnd={() => {
-          console.log('Carousel scroll ended');
+          console.log('轮播滚动结束');
           // 滑动结束后重新启动自动播放
           setTimeout(() => {
             startAutoPlay();
