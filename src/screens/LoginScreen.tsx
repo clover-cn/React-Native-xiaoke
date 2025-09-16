@@ -38,6 +38,9 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   };
 
   const handleLogin = async () => {
+    if (!agree) {
+      return;
+    }
     console.log('登录');
     // 模拟存储token
     let token= 'eyJhbGciOiJIUzUxMiJ9.eyJ1c2VfZW5kIjoiTUVNQkVSX0EiLCJ1c2VyX2lkIjoxODM5MTQwOTg2MjUwMzEzNzI4LCJ1c2VyX2tleSI6IjE4MzkxNDA5ODYyNTAzMTM3MjgtNTUzNTk0ZGMtM2VjYS00NzkyLWJkYmUtNzUzNjZiZDZiMGM5IiwidXNlcm5hbWUiOiLnp6blp4vnmocifQ.YKYJMbUdL28kNuhU8wmv-AqMkZkcxp-wwHIgVxUHPFZb2mJESvn51We5MRr2KcpPIt-ZB3tGuzwFlhAyMbfPqw'
@@ -113,7 +116,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
                   colors={["#FF8A00", "#FF5E00"]}
                   start={{ x: 0, y: 0.5 }}
                   end={{ x: 1, y: 0.5 }}
-                  style={styles.loginButton}
+                  style={[styles.loginButton, { opacity: agree ? 1 : 0.5 }]}
                 >
                   <Text style={styles.loginButtonText}>登录</Text>
                 </LinearGradient>
@@ -125,7 +128,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
                 activeOpacity={0.8}
                 style={styles.agreementRow}
               >
-                <View style={[styles.checkbox, agree && styles.checkboxChecked]} />
+                <View style={[styles.checkbox, agree && styles.checkboxChecked]}>
+                  {agree && <Text style={styles.checkboxIcon}>✓</Text>}
+                </View>
+
                 <Text style={styles.agreementText}>
                   我同意小程序使用我所提交的信息用于账户开通，并已查看
                   <Text style={styles.link}>《用户服务协议》</Text>
@@ -250,6 +256,12 @@ const styles = StyleSheet.create({
   },
   checkboxChecked: {
     backgroundColor: '#FF6B35',
+  },
+  checkboxIcon: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 14,
   },
   agreementText: {
     flex: 1,
