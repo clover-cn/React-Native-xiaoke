@@ -12,16 +12,19 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import CustomHeader from '../components/CustomHeader';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import { setToken } from '../utils/http';
+import type { StackNavigationProp } from '@react-navigation/stack';
+import type { RootStackParamList } from '../navigation/types';
+import { navigateToHome } from '../services/navigationService';
 const { width } = Dimensions.get('window');
 
-interface LoginScreenProps {
-  onLogin?: () => void; // 可选：用于开发时返回主界面
-}
+type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Auth'>;
 
 const NAV_BAR_HEIGHT = 200;
 
-const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
+const LoginScreen: React.FC = () => {
+  const navigation = useNavigation<LoginScreenNavigationProp>();
   const insets = useSafeAreaInsets();
   const [phone, setPhone] = React.useState('');
   const [code, setCode] = React.useState('');
@@ -45,7 +48,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
     // 模拟存储token
     let token= 'eyJhbGciOiJIUzUxMiJ9.eyJ1c2VfZW5kIjoiTUVNQkVSX0EiLCJ1c2VyX2lkIjoxODM5MTQwOTg2MjUwMzEzNzI4LCJ1c2VyX2tleSI6IjE4MzkxNDA5ODYyNTAzMTM3MjgtNTUzNTk0ZGMtM2VjYS00NzkyLWJkYmUtNzUzNjZiZDZiMGM5IiwidXNlcm5hbWUiOiLnp6blp4vnmocifQ.YKYJMbUdL28kNuhU8wmv-AqMkZkcxp-wwHIgVxUHPFZb2mJESvn51We5MRr2KcpPIt-ZB3tGuzwFlhAyMbfPqw'
     setToken(token)
-    onLogin && onLogin();
+    // 使用React Navigation跳转到主页面
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Main' }],
+    });
   };
 
   return (

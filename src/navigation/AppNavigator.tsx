@@ -1,27 +1,34 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, BackHandler, ToastAndroid } from 'react-native';
-import { useTheme } from '../hooks/useTheme';
-import HomeScreen from '../screens/HomeScreen';
-import ChargeScreen from '../screens/ChargeScreen';
-import HelpScreen from '../screens/HelpScreen';
-import MyScreen from '../screens/MyScreen';
+import React, { useState, useEffect, useRef } from 'react';
+import { BackHandler, ToastAndroid, DeviceEventEmitter } from 'react-native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import AuthNavigator from './AuthNavigator';
+import MainTabNavigator from './MainTabNavigator';
 import ScanScreen from '../screens/ScanScreen';
-import LoginScreen from '../screens/LoginScreen';
-import TabBar from '../components/TabBar';
-import { TabBarImages } from '../assets/tabBarImages';
-import { ScanProvider, useScan } from '../contexts/ScanContext';
-type Screen = 'home' | 'charge' | 'help' | 'my' | 'login';
+import { RootStackParamList } from './types';
+import { useScan } from '../contexts/ScanContext';
+import { NAVIGATION_EVENTS } from '../services/navigationService';
+import { getToken } from '../utils/interceptors';
 
-const AppNavigatorContent: React.FC = () => {
-  const [currentScreen, setCurrentScreen] = useState<Screen>('home');
-  const [scanResult, setScanResult] = useState<string | undefined>();
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true);
-  const { theme } = useTheme();
-  const { isScanning, startScan, stopScan, onScanCancel } = useScan();
-  const lastBackPressed = React.useRef<number | null>(null);
+const Stack = createStackNavigator<RootStackParamList>();
 
-  React.useEffect(() => {
+const AppNavigator: React.FC = () => {
+  const { isScanning, stopScan, onScanCancel } = useScan();
+  const lastBackPressed = useRef<number | null>(null);
+  
+  // 检查初始登录状态
+  const [initialRouteName, setInitialRouteName] = useState<keyof RootStackParamList | null>(null);
+  
+  useEffect(() => {
+    // 检查是否有token来决定初始路由
+    const token = getToken();
+    setInitialRouteName(token ? 'Main' : 'Auth');
+  }, []);
+
+  // 处理硬件返回键
+  useEffect(() => {
     const backAction = () => {
+      // 如果正在扫码，取消扫码
       if (isScanning) {
         if (onScanCancel) {
           onScanCancel();
@@ -30,21 +37,7 @@ const AppNavigatorContent: React.FC = () => {
         return true;
       }
 
-      // 在登录页按返回：回到首页，但保持未登录状态
-      if (!isLoggedIn && currentScreen === 'login') {
-        setCurrentScreen('home');
-        setIsLoggedIn(true); // 设置为已登录状态，确保TabBar显示
-        return true;
-      }
-      console.log('======>',currentScreen);
-      
-      // 非首页：先回到首页
-      if (currentScreen !== 'home') {
-        setCurrentScreen('home');
-        return true;
-      }
-
-      // 首页：双击退出
+      // 双击退出应用
       if (
         lastBackPressed.current &&
         lastBackPressed.current + 2000 >= Date.now()
@@ -64,141 +57,85 @@ const AppNavigatorContent: React.FC = () => {
     );
 
     return () => backHandler.remove();
-  }, [currentScreen, isScanning, onScanCancel, stopScan, isLoggedIn]);
+  }, [isScanning, onScanCancel, stopScan]);
 
-  // 按照小程序源码的TabBar配置
-  const leftTabs = [
-    {
-      key: 'home',
-      title: '首页',
-      icon: TabBarImages.home.normal,
-      activeIcon: TabBarImages.home.active,
-      index: '1'
-    },
-    {
-      key: 'charge',
-      title: '充值',
-      icon: TabBarImages.charge.normal,
-      activeIcon: TabBarImages.charge.active,
-      index: '2'
-    }
-  ];
-
-  const rightTabs = [
-    {
-      key: 'help',
-      title: '帮助',
-      icon: TabBarImages.help.normal,
-      activeIcon: TabBarImages.help.active,
-      index: '3'
-    },
-    {
-      key: 'my',
-      title: '我的',
-      icon: TabBarImages.my.normal,
-      activeIcon: TabBarImages.my.active,
-      index: '4'
-    }
-  ];
-
-  const renderScreen = () => {
-    // 未登录时，强制进入登录页
-    if (!isLoggedIn) {
-      return <LoginScreen onLogin={() => { setIsLoggedIn(true); setCurrentScreen('home'); }} />;
-    }
-
-    switch (currentScreen) {
-      case 'home':
-        return (
-          <HomeScreen
-            scanResult={scanResult}
-            onScanResultReceived={() => setScanResult(undefined)}
-          />
-        );
-      case 'charge':
-        return <ChargeScreen />;
-      case 'help':
-        return <HelpScreen />;
-      case 'my':
-        return <MyScreen onLogout={() => { setIsLoggedIn(false); setCurrentScreen('login'); }} />;
-      case 'login':
-        return <LoginScreen onLogin={() => { setIsLoggedIn(true); setCurrentScreen('home'); }} />;
-      default:
-        return (
-          <HomeScreen
-            scanResult={scanResult}
-            onScanResultReceived={() => setScanResult(undefined)}
-          />
-        );
-    }
-  };
-
-  const handleTabPress = (tabKey: string, index: string) => {
-    if (index === '5') {
-      // 启动扫码功能
-      startScan(
-        (data: string) => {
-          // 将扫码结果传递给首页
-          setScanResult(data);
-          // 确保当前在首页
-          setCurrentScreen('home');
-        },
-        () => {
-          console.log('扫码取消');
-          // 扫码取消的处理
-        }
-      );
-      return;
-    }
-    setCurrentScreen(tabKey as Screen);
-  };
+  // 如果还没确定初始路由，显示加载状态
+  if (!initialRouteName) {
+    return null; // 或者返回一个Loading组件
+  }
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <View style={styles.screen}>
-        {renderScreen()}
-      </View>
-      {/* 未登录时不显示 TabBar */}
-      {!isScanning && isLoggedIn && (
-        <TabBar
-          leftTabs={leftTabs}
-          rightTabs={rightTabs}
-          activeTab={currentScreen}
-          onTabPress={handleTabPress}
-        />
-      )}
-
-      {/* 扫码界面作为全屏覆盖层 */}
-      {isScanning && (
-        <View style={styles.scanOverlay}>
-          <ScanScreen />
-        </View>
-      )}
-    </View>
+    <Stack.Navigator
+      initialRouteName={initialRouteName}
+      screenOptions={{ headerShown: false }}
+    >
+      <Stack.Screen name="Auth" component={AuthNavigator} />
+      <Stack.Screen name="Main" component={MainTabNavigator} />
+      <Stack.Screen
+        name="Scan"
+        component={ScanScreen}
+        options={{
+          presentation: 'modal',
+          gestureEnabled: false,
+        }}
+      />
+    </Stack.Navigator>
   );
 };
 
-// 主导航组件
-const AppNavigator: React.FC = () => {
-  return <AppNavigatorContent />;
-};
+// 处理主页面的返回键逻辑
+export const useMainScreenBackHandler = () => {
+  const navigation = useNavigation<any>();
+  const lastBackPressed = useRef<number | null>(null);
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  screen: {
-    flex: 1,
-  },
-  scanOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 1000,
-    backgroundColor: '#000',
-  },
-});
+  useFocusEffect(
+    React.useCallback(() => {
+      const backAction = () => {
+        const state = navigation.getState();
+        
+        // 安全检查 state 和相关属性
+        if (!state || !state.routes || state.index === undefined) {
+          return false;
+        }
+        
+        const currentRoute = state.routes[state.index];
+        
+        // 如果当前在Tab Navigator中
+        if (currentRoute?.name === 'Main' && currentRoute.state) {
+          const tabState = currentRoute.state;
+          if (tabState.routes && tabState.index !== undefined) {
+            const currentTab = tabState.routes[tabState.index];
+            
+            // 如果不在首页，先跳转到首页
+            if (currentTab?.name !== 'Home') {
+              navigation.navigate('Main', { screen: 'Home' });
+              return true;
+            }
+          }
+        }
+
+        // 如果已经在首页，双击退出
+        if (
+          lastBackPressed.current &&
+          lastBackPressed.current + 2000 >= Date.now()
+        ) {
+          BackHandler.exitApp();
+          return true;
+        }
+
+        lastBackPressed.current = Date.now();
+        ToastAndroid.show('再按一次退出应用', ToastAndroid.SHORT);
+        return true;
+      };
+
+      const backHandler = BackHandler.addEventListener(
+        'hardwareBackPress',
+        backAction
+      );
+
+      return () => backHandler.remove();
+    }, [navigation])
+  );
+};
 
 export default AppNavigator;

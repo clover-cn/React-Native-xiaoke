@@ -1,9 +1,11 @@
 import React, { useEffect, useRef } from 'react';
 import { StyleSheet } from 'react-native';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { NavigationContainer } from '@react-navigation/native';
 import { AppNavigator, useTheme, initHttp, configureHttp } from './src';
 import { ScanProvider, useScan } from './src/contexts/ScanContext';
 import { shortcutService, SHORTCUT_ACTIONS } from './src/services/shortcutService';
+import { navigationRef } from './src/services/navigationService';
 
 // 应用主组件内容
 const AppContent: React.FC = () => {
@@ -92,7 +94,11 @@ const AppContent: React.FC = () => {
     };
   }, [startScan]);
 
-  return <AppNavigator />;
+  return (
+    <NavigationContainer ref={navigationRef}>
+      <AppNavigator />
+    </NavigationContainer>
+  );
 };
 
 // 主应用组件

@@ -3,6 +3,8 @@ import httpClient, { RequestConfig } from './request';
 
 // 使用公共封装的 storage（基于 MMKV）
 import storage from './Common';
+// 导入导航服务
+import { navigationRef } from '../services/navigationService';
 
 // token 键名（局部常量，按需跨模块可提升至 Common.ts）
 const TOKEN_KEY = 'APP_AUTH_TOKEN';
@@ -94,8 +96,23 @@ const commonResponseInterceptor = async (
         case 401:
           // 未授权，清除token并跳转登录
           clearToken();
-          Alert.alert('提示', '登录已过期，请重新登录');
-          // 这里可以添加跳转到登录页面的逻辑
+          Alert.alert('提示', '登录已过期，请重新登录', [
+            {
+              text: '确定',
+              onPress: () => {
+                // 延迟一下确保Alert关闭后再执行导航
+                setTimeout(() => {
+                  // 现在可以直接使用reset跳转到Auth页面
+                  if (navigationRef.isReady()) {
+                    navigationRef.reset({
+                      index: 0,
+                      routes: [{ name: 'Auth' }],
+                    });
+                  }
+                }, 100);
+              },
+            },
+          ]);
           break;
         case 403:
           Alert.alert('提示', '没有权限访问该资源');

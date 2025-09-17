@@ -15,6 +15,7 @@ export { default as HomeHeader } from './components/HomeHeader';
 
 // Navigation
 export { default as AppNavigator } from './navigation/AppNavigator';
+export * from './services/navigationService';
 
 // Hooks
 export { useTheme } from './hooks/useTheme';

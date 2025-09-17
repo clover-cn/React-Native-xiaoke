@@ -17,6 +17,7 @@ import HomeHeader from '../components/HomeHeader';
 import { Images } from '../assets/images';
 import LinearGradient from 'react-native-linear-gradient'; // 导入 LinearGradient
 import { useScan } from '../contexts/ScanContext';
+import { useMainScreenBackHandler } from '../navigation/AppNavigator';
 import apiService, { User, Device, LoginParams } from '../services/api';
 const { width } = Dimensions.get('window');
 const COMMON_IMG_ASPECT_RATIO = 106 / 670; // 图片实际宽高比
@@ -35,6 +36,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   const { theme } = useTheme();
   const { startScan } = useScan();
   const insets = useSafeAreaInsets(); // 获取安全区域边距
+  
+  // 使用React Navigation的返回键处理
+  useMainScreenBackHandler();
 
   // 底部 TabBar 遮挡处理：TabBar 组件整体高度 = tabbarNav(70) + secure(32) - tabbarBox.bottom(-30)
   // 实际覆盖可见高度大约为 70 + 32 - 30 = 72，再加上底部安全区

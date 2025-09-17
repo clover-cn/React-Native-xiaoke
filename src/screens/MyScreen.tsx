@@ -13,13 +13,16 @@ import { useTheme } from '../hooks/useTheme';
 import CustomHeader from '../components/CustomHeader';
 import LinearGradient from 'react-native-linear-gradient'; // 渐变库
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { clearToken } from '../utils/interceptors';
+import type { StackNavigationProp } from '@react-navigation/stack';
+import type { RootStackParamList } from '../navigation/types';
 const { width } = Dimensions.get('window');
 
-interface MyScreenProps {
-  onLogout?: () => void;
-}
+type MyScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Main'>;
 
-const MyScreen: React.FC<MyScreenProps> = ({ onLogout }) => {
+const MyScreen: React.FC = () => {
+  const navigation = useNavigation<MyScreenNavigationProp>();
   const { theme } = useTheme();
   const insets = useSafeAreaInsets(); // 获取安全区域边距
   const featureList = [
@@ -45,8 +48,12 @@ const MyScreen: React.FC<MyScreenProps> = ({ onLogout }) => {
   };
   const handleFunctionPress = (item: any) => {
     if (item?.name === '退出登录') {
-      // 回调给上层：退出到登录页
-      onLogout && onLogout();
+      // 清除token并跳转到登录页
+      clearToken();
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Auth' }],
+      });
       return;
     }
     console.log('功能被点击:', item);
