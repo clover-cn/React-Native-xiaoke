@@ -36,7 +36,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   const { theme } = useTheme();
   const { startScan } = useScan();
   const insets = useSafeAreaInsets(); // 获取安全区域边距
-  
+
   // 使用React Navigation的返回键处理
   useMainScreenBackHandler();
 
@@ -125,15 +125,20 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
 
     return () => clearInterval(timer);
   }, [messages.length]);
-  
+
   // 页面加载时获取项目列表
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const res = await apiService.getDeviceList();
+        const res: any = await apiService.getDeviceList();
         if (cancelled) return;
         console.log('获取项目列表', res);
+        if (res.projects.length > 0) {
+          console.log('开始设置当前项目为第一个:', res.projects[0]);
+        } else if (res.projects.length <= 0) {
+          console.warn('项目为空');
+        }
       } catch (e) {
         if (cancelled) return;
         console.error(e);

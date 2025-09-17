@@ -29,7 +29,7 @@ export const clearToken = (): void => {
 const authRequestInterceptor = (config: RequestConfig): RequestConfig => {
   const token = getToken();
   console.log('获取到的 token:', token);
-  
+
   if (token) {
     config.headers = {
       ...config.headers,
@@ -95,27 +95,21 @@ const commonResponseInterceptor = async (
       switch (data.code) {
         case 401:
           // 未授权，清除token并跳转登录
+          ToastAndroid.show('登录已过期，请重新登录', ToastAndroid.SHORT);
           clearToken();
-          Alert.alert('提示', '登录已过期，请重新登录', [
-            {
-              text: '确定',
-              onPress: () => {
-                // 延迟一下确保Alert关闭后再执行导航
-                setTimeout(() => {
-                  // 现在可以直接使用reset跳转到Auth页面
-                  if (navigationRef.isReady()) {
-                    navigationRef.reset({
-                      index: 0,
-                      routes: [{ name: 'Auth' }],
-                    });
-                  }
-                }, 100);
-              },
-            },
-          ]);
+          setTimeout(() => {
+            // 直接使用reset跳转到Auth页面
+            if (navigationRef.isReady()) {
+              navigationRef.reset({
+                index: 0,
+                routes: [{ name: 'Auth' }],
+              });
+            }
+          }, 100);
           break;
         case 403:
           Alert.alert('提示', '没有权限访问该资源');
+          navigationRef.goBack();
           break;
         case 500:
           Alert.alert('提示', '服务器内部错误，请稍后重试');
