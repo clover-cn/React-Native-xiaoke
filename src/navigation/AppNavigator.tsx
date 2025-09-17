@@ -178,13 +178,9 @@ const AppNavigatorContent: React.FC = () => {
   );
 };
 
-// 主导航组件，包装了 ScanProvider
+// 主导航组件
 const AppNavigator: React.FC = () => {
-  return (
-    <ScanProvider>
-      <AppNavigatorContent />
-    </ScanProvider>
-  );
+  return <AppNavigatorContent />;
 };
 
 const styles = StyleSheet.create({
