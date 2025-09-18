@@ -16,10 +16,11 @@ interface BannerItem {
 
 interface BannerCarouselProps {
   data: BannerItem[];
+  isFocused?: boolean;
   onPress?: (item: BannerItem, index: number) => void;
 }
 
-const BannerCarousel: React.FC<BannerCarouselProps> = ({ data, onPress }) => {
+const BannerCarousel: React.FC<BannerCarouselProps> = ({ data, isFocused, onPress }) => {
 
   const carouselRef = useRef<ICarouselInstance>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -28,6 +29,7 @@ const BannerCarousel: React.FC<BannerCarouselProps> = ({ data, onPress }) => {
   // 清理定时器
   const clearAutoPlayTimer = () => {
     if (autoPlayTimerRef.current) {
+      console.log('清理自动播放计时器');
       clearInterval(autoPlayTimerRef.current);
       autoPlayTimerRef.current = null;
     }
@@ -35,11 +37,17 @@ const BannerCarousel: React.FC<BannerCarouselProps> = ({ data, onPress }) => {
 
   // 启动自动播放
   const startAutoPlay = () => {
-    if (data && data.length > 1) {
+    if (data && data.length > 1 && isFocused) {
       clearAutoPlayTimer();
       console.log('开始手动自动播放计时器');
 
       autoPlayTimerRef.current = setInterval(() => {
+        // 在定时器回调中也检查焦点状态
+        if (!isFocused) {
+          clearAutoPlayTimer();
+          return;
+        }
+        
         setCurrentIndex((prevIndex) => {
           const nextIndex = (prevIndex + 1) % data.length;
           console.log('自动切换到索引:', nextIndex);
@@ -55,17 +63,21 @@ const BannerCarousel: React.FC<BannerCarouselProps> = ({ data, onPress }) => {
     }
   };
 
-  // 组件挂载时启动自动播放
+  // 监听isFocused状态变化，只在页面获得焦点时启动自动播放
   useEffect(() => {
-    const timer = setTimeout(() => {
-      startAutoPlay();
-    }, 1000); // 延迟1秒启动，确保组件完全渲染
+    if (isFocused) {
+      const timer = setTimeout(() => {
+        startAutoPlay();
+      }, 1000); // 延迟1秒启动，确保组件完全渲染
 
-    return () => {
-      clearTimeout(timer);
+      return () => {
+        clearTimeout(timer);
+      };
+    } else {
+      // 失去焦点时清理定时器
       clearAutoPlayTimer();
-    };
-  }, [data]);
+    }
+  }, [isFocused, data]);
 
   // 组件卸载时清理定时器
   useEffect(() => {
@@ -121,10 +133,12 @@ const BannerCarousel: React.FC<BannerCarouselProps> = ({ data, onPress }) => {
         }}
         onScrollEnd={() => {
           console.log('轮播滚动结束');
-          // 滑动结束后重新启动自动播放
-          setTimeout(() => {
-            startAutoPlay();
-          }, 2000); // 2秒后重新启动
+          // 滑动结束后重新启动自动播放，但只在页面获得焦点时启动
+          if (isFocused) {
+            setTimeout(() => {
+              startAutoPlay();
+            }, 2000); // 2秒后重新启动
+          }
         }}
       />
     </View>

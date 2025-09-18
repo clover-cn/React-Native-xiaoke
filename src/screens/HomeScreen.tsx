@@ -10,6 +10,7 @@ import {
   StatusBar,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 
 import { useTheme } from '../hooks/useTheme';
 import BannerCarousel from '../components/BannerCarousel';
@@ -37,6 +38,19 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   const { theme } = useTheme();
   const { startScan } = useScan();
   const insets = useSafeAreaInsets(); // 获取安全区域边距
+  
+  // 页面焦点状态
+  const [isFocused, setIsFocused] = useState(false);
+  
+  // 监听页面焦点状态(页面聚焦/失焦)
+  useFocusEffect(
+    React.useCallback(() => {
+      setIsFocused(true);
+      return () => {
+        setIsFocused(false);
+      };
+    }, [])
+  );
 
   // 使用React Navigation的返回键处理
   useMainScreenBackHandler();
@@ -230,6 +244,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
         <View style={[styles.bannerOverlay, { top: insets.top + 60 }]}>
           <BannerCarousel
             data={Images.bannerImage}
+            isFocused={isFocused}
             onPress={(item, index) => {
               console.log('Banner clicked:', item, index);
             }}
