@@ -6,8 +6,6 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from 'react-native';
-import { useScan } from '../contexts/ScanContext';
-import { openScanScreen } from '../services/navigationService';
 interface Project {
   id: string;
   name: string;
@@ -35,21 +33,6 @@ const ProjectList: React.FC = () => {
       setLoading(false);
     }, 1000);
   };
-  const { startScan } = useScan();
-  // 启动扫码的函数
-  const startScanFromHome = () => {
-    console.log('启动扫码');
-    const onResult = (data: string) => {
-      console.log('扫码结果:', data);
-    };
-    const onCancel = () => {
-      console.log('扫码取消');
-    };
-    // 设置回调并更新全局扫码状态
-    startScan(onResult, onCancel);
-    // 在独立页面（如 ProjectList）中，使用路由打开扫码页
-    openScanScreen(onResult, onCancel);
-  };
 
   const renderItem = ({ item }: { item: Project }) => (
     <TouchableOpacity style={styles.projectItem}>
@@ -60,8 +43,8 @@ const ProjectList: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={startScanFromHome}>
-        <Text style={styles.header}>点击扫码</Text>
+      <TouchableOpacity>
+        <Text style={styles.header}>项目列表</Text>
       </TouchableOpacity>
       {loading ? (
         <View style={styles.loadingContainer}>
