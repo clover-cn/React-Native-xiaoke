@@ -7,14 +7,19 @@ const { width } = Dimensions.get('window');
 
 interface CustomTabNavigatorProps extends BottomTabBarProps {
   onScanPress: () => void;
+  hidden?: boolean;
 }
 
 const CustomTabNavigator: React.FC<CustomTabNavigatorProps> = ({ 
   state, 
   descriptors, 
   navigation,
-  onScanPress 
+  onScanPress,
+  hidden = false,
 }) => {
+  if (hidden) {
+    return null;
+  }
   const tabConfig = [
     {
       key: 'Home',

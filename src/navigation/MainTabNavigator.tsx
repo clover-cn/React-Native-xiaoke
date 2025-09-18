@@ -34,7 +34,11 @@ const MainTabNavigator: React.FC = () => {
       <Tab.Navigator
         screenOptions={{ headerShown: false }}
         tabBar={(props) => (
-          <CustomTabNavigator {...props} onScanPress={handleScanPress} />
+          <CustomTabNavigator
+            {...props}
+            onScanPress={handleScanPress}
+            hidden={isScanning}
+          />
         )}
       >
         <Tab.Screen name="Home">
