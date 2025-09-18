@@ -82,7 +82,7 @@ const loggingRequestInterceptor = (config: RequestConfig): RequestConfig => {
   return config;
 };
 
-// 响应拦截器：处理通用响应
+// 响应拦截器：处理成功响应中的业务错误码（处理业务错误码）
 const commonResponseInterceptor = async (
   response: Response,
 ): Promise<Response> => {
@@ -93,6 +93,11 @@ const commonResponseInterceptor = async (
     headers: Object.fromEntries(response.headers.entries()),
   });
 
+  // 如果不是成功的HTTP状态码，直接返回让errorInterceptor处理
+  if (!response.ok) {
+    return response;
+  }
+
   // 克隆响应以便多次读取
   const clonedResponse = response.clone();
 
@@ -100,8 +105,7 @@ const commonResponseInterceptor = async (
     const data = await clonedResponse.json();
     console.log('响应数据:', data);
 
-    // ToastAndroid.show('再按一次退出应用', ToastAndroid.SHORT);
-    // 处理业务错误码
+    // 只处理成功HTTP响应中的业务错误码
     if (data.code && data.code != 200 && data.code != 0) {
       const businessMessage = data.message || data.msg || 'Unknown error';
       console.warn('⚠️ Business Error:', businessMessage);
@@ -113,7 +117,6 @@ const commonResponseInterceptor = async (
           ToastAndroid.show('登录已过期，请重新登录', ToastAndroid.SHORT);
           clearToken();
           setTimeout(() => {
-            // 直接使用reset跳转到Auth页面
             if (navigationRef.isReady()) {
               navigationRef.reset({
                 index: 0,
@@ -126,9 +129,6 @@ const commonResponseInterceptor = async (
           Alert.alert('提示', '没有权限访问该资源');
           navigationRef.goBack();
           break;
-        case 500:
-          Alert.alert('提示', '服务器内部错误，请稍后重试');
-          break;
         default:
           if (businessMessage) {
             Alert.alert('提示', businessMessage);
@@ -138,33 +138,60 @@ const commonResponseInterceptor = async (
       throw new BusinessError(data.code, businessMessage, data);
     }
   } catch (error) {
+    // 如果已经是BusinessError，直接抛出
+    if (error instanceof BusinessError) {
+      throw error;
+    }
+    // 响应不是JSON格式，直接返回原响应
     console.log('响应不是JSON格式');
-    throw error;
   }
 
   return response;
 };
 
-// 错误拦截器：处理网络错误
+// 错误拦截器：统一处理HTTP状态码错误和网络错误（处理HTTP状态码错误）
 const errorInterceptor = async (error: Error): Promise<never> => {
   console.error('❌ 请求错误:', error);
 
+  // 如果是业务错误，直接重新抛出
+  if (error instanceof BusinessError) {
+    throw error;
+  }
+
   let errorMessage = '网络请求失败';
 
+  // 处理网络错误
   if (error.name === 'AbortError') {
     errorMessage = '请求超时，请检查网络连接';
   } else if (error.message.includes('Network request failed')) {
     errorMessage = '网络连接失败，请检查网络设置';
   } else if (error.message.includes('HTTP Error')) {
+    // 处理HTTP状态码错误
     const statusMatch = error.message.match(/HTTP Error: (\d+)/);
     if (statusMatch) {
       const status = parseInt(statusMatch[1]);
       switch (status) {
+        case 401:
+          // HTTP状态码401，清除token并跳转登录
+          ToastAndroid.show('登录已过期，请重新登录', ToastAndroid.SHORT);
+          clearToken();
+          setTimeout(() => {
+            if (navigationRef.isReady()) {
+              navigationRef.reset({
+                index: 0,
+                routes: [{ name: 'Auth' }],
+              });
+            }
+          }, 100);
+          throw error; // 不显示额外的Toast
+        case 403:
+          errorMessage = '没有权限访问该资源';
+          break;
         case 404:
           errorMessage = '请求的资源不存在';
           break;
         case 500:
-          errorMessage = '服务器内部错误';
+          errorMessage = '服务器内部错误，请稍后重试';
           break;
         case 502:
           errorMessage = '网关错误';
