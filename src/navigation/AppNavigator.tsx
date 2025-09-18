@@ -78,7 +78,7 @@ const AppNavigator: React.FC = () => {
         options={{
           presentation: 'card',
           headerShown: true,
-          title: '选择项目',
+          title: '切换项目',
           headerStyle: {
             backgroundColor: '#6200ea',
             elevation: 4,

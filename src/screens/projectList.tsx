@@ -6,56 +6,63 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from 'react-native';
+import apiService from '../services/api';
 interface Project {
-  id: string;
-  name: string;
-  description: string;
+  projectId: string;
+  groupName: string;
+  projectName: string;
 }
 
 const ProjectList: React.FC = () => {
-  const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
- 
+
   useEffect(() => {
-    // Simulate fetching data
-    fetchProjects();
+    projectList();
   }, []);
 
-  const fetchProjects = () => {
-    // Placeholder for API call
-    setTimeout(() => {
-      const dummyData: Project[] = [
-        { id: '1', name: 'Project A', description: 'This is project A' },
-        { id: '2', name: 'Project B', description: 'This is project B' },
-        { id: '3', name: 'Project C', description: 'This is project C' },
-      ];
-      setProjects(dummyData);
-      setLoading(false);
-    }, 1000);
+  
+  // 获取项目列表
+  const [projectListData, setProjectListData] = useState<Project[]>([]);
+  const projectList = async () => {
+    try {
+      const res: any = await apiService.getDeviceList();
+      console.log('获取项目列表', res);
+      if (res.projects.length > 0) {
+        console.log('开始设置当前项目为第一个:', res.projects[0]);
+        setLoading(false);
+        setProjectListData(res.projects);
+      } else if (res.projects.length <= 0) {
+
+        console.warn('项目为空');
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const renderItem = ({ item }: { item: Project }) => (
     <TouchableOpacity style={styles.projectItem}>
-      <Text style={styles.projectName}>{item.name}</Text>
-      <Text style={styles.projectDescription}>{item.description}</Text>
+      <Text style={styles.projectName}>{item.projectName}</Text>
+      <Text style={styles.projectDescription}>{item.projectId}</Text>
     </TouchableOpacity>
   );
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity>
+      {/* <TouchableOpacity>
         <Text style={styles.header}>项目列表</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
       {loading ? (
         <View style={styles.loadingContainer}>
           <Text>Loading projects...</Text>
         </View>
       ) : (
         <FlatList
-          data={projects}
+          data={projectListData}
           renderItem={renderItem}
-          keyExtractor={item => item.id}
+          keyExtractor={item => item.projectId}
           contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false} // 隐藏垂直滚动条
         />
       )}
     </View>
