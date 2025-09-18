@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import {
   StyleSheet,
   Text,
@@ -44,9 +44,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   
   // 监听页面焦点状态(页面聚焦/失焦)
   useFocusEffect(
-    React.useCallback(() => {
+    useCallback(() => {
+      console.log('HomeScreen 获得焦点');
+      
       setIsFocused(true);
       return () => {
+        console.log('HomeScreen 失去焦点');
         setIsFocused(false);
       };
     }, [])
