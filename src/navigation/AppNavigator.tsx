@@ -17,7 +17,6 @@ const Stack = createStackNavigator<RootStackParamList>();
 
 const AppNavigator: React.FC = () => {
   const { isScanning, stopScan, onScanCancel } = useScan();
-  const lastBackPressed = useRef<number | null>(null);
 
   // 检查初始登录状态
   const [initialRouteName, setInitialRouteName] = useState<
@@ -30,7 +29,7 @@ const AppNavigator: React.FC = () => {
     setInitialRouteName(token ? 'Main' : 'Auth');
   }, []);
 
-  // 处理硬件返回键
+  // 处理硬件返回键：仅在扫码时拦截
   useEffect(() => {
     const backAction = () => {
       // 如果正在扫码，取消扫码
@@ -42,18 +41,7 @@ const AppNavigator: React.FC = () => {
         return true;
       }
 
-      // 双击退出应用
-      if (
-        lastBackPressed.current &&
-        lastBackPressed.current + 2000 >= Date.now()
-      ) {
-        BackHandler.exitApp();
-        return true;
-      }
-
-      lastBackPressed.current = Date.now();
-      ToastAndroid.show('再按一次退出应用', ToastAndroid.SHORT);
-      return true;
+      return false;
     };
 
     const backHandler = BackHandler.addEventListener(
