@@ -8,9 +8,11 @@ import {
   Vibration,
 } from 'react-native';
 import { Camera, CameraType } from 'react-native-camera-kit';
+import { useNavigation } from '@react-navigation/native';
 import { useScan } from '../contexts/ScanContext';
 
 const ScanScreen: React.FC = () => {
+  const navigation = useNavigation();
   const { stopScan, onScanResult, onScanCancel } = useScan();
   const [isScanning, setIsScanning] = useState(true);
 
@@ -34,6 +36,11 @@ const ScanScreen: React.FC = () => {
       onScanResult(data);
     }
     stopScan();
+    
+    // 导航返回上一页
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    }
   };
 
   const handleBack = () => {
@@ -42,6 +49,11 @@ const ScanScreen: React.FC = () => {
       onScanCancel();
     }
     stopScan();
+    
+    // 导航返回上一页
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    }
   };
 
   return (

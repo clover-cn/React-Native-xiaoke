@@ -1,99 +1,123 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
-
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  TouchableOpacity,
+} from 'react-native';
+import { useScan } from '../contexts/ScanContext';
+import { openScanScreen } from '../services/navigationService';
 interface Project {
-    id: string;
-    name: string;
-    description: string;
+  id: string;
+  name: string;
+  description: string;
 }
 
 const ProjectList: React.FC = () => {
-    const [projects, setProjects] = useState<Project[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+ 
+  useEffect(() => {
+    // Simulate fetching data
+    fetchProjects();
+  }, []);
 
-    useEffect(() => {
-        // Simulate fetching data
-        fetchProjects();
-    }, []);
-
-    const fetchProjects = () => {
-        // Placeholder for API call
-        setTimeout(() => {
-            const dummyData: Project[] = [
-                { id: '1', name: 'Project A', description: 'This is project A' },
-                { id: '2', name: 'Project B', description: 'This is project B' },
-                { id: '3', name: 'Project C', description: 'This is project C' },
-            ];
-            setProjects(dummyData);
-            setLoading(false);
-        }, 1000);
+  const fetchProjects = () => {
+    // Placeholder for API call
+    setTimeout(() => {
+      const dummyData: Project[] = [
+        { id: '1', name: 'Project A', description: 'This is project A' },
+        { id: '2', name: 'Project B', description: 'This is project B' },
+        { id: '3', name: 'Project C', description: 'This is project C' },
+      ];
+      setProjects(dummyData);
+      setLoading(false);
+    }, 1000);
+  };
+  const { startScan } = useScan();
+  // 启动扫码的函数
+  const startScanFromHome = () => {
+    console.log('启动扫码');
+    const onResult = (data: string) => {
+      console.log('扫码结果:', data);
     };
+    const onCancel = () => {
+      console.log('扫码取消');
+    };
+    // 设置回调并更新全局扫码状态
+    startScan(onResult, onCancel);
+    // 在独立页面（如 ProjectList）中，使用路由打开扫码页
+    openScanScreen(onResult, onCancel);
+  };
 
-    const renderItem = ({ item }: { item: Project }) => (
-        <TouchableOpacity style={styles.projectItem}>
-            <Text style={styles.projectName}>{item.name}</Text>
-            <Text style={styles.projectDescription}>{item.description}</Text>
-        </TouchableOpacity>
-    );
+  const renderItem = ({ item }: { item: Project }) => (
+    <TouchableOpacity style={styles.projectItem}>
+      <Text style={styles.projectName}>{item.name}</Text>
+      <Text style={styles.projectDescription}>{item.description}</Text>
+    </TouchableOpacity>
+  );
 
-    return (
-        <View style={styles.container}>
-            <Text style={styles.header}>Projects</Text>
-            {loading ? (
-                <View style={styles.loadingContainer}>
-                    <Text>Loading projects...</Text>
-                </View>
-            ) : (
-                <FlatList
-                    data={projects}
-                    renderItem={renderItem}
-                    keyExtractor={(item) => item.id}
-                    contentContainerStyle={styles.listContainer}
-                />
-            )}
+  return (
+    <View style={styles.container}>
+      <TouchableOpacity onPress={startScanFromHome}>
+        <Text style={styles.header}>点击扫码</Text>
+      </TouchableOpacity>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <Text>Loading projects...</Text>
         </View>
-    );
+      ) : (
+        <FlatList
+          data={projects}
+          renderItem={renderItem}
+          keyExtractor={item => item.id}
+          contentContainerStyle={styles.listContainer}
+        />
+      )}
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 16,
-        backgroundColor: '#f5f5f5',
-    },
-    header: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 16,
-    },
-    listContainer: {
-        paddingBottom: 20
-    },
-    projectItem: {
-        backgroundColor: 'white',
-        padding: 16,
-        borderRadius: 8,
-        marginBottom: 12,
-        elevation: 2,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.2,
-        shadowRadius: 1.41,
-    },
-    projectName: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 4,
-    },
-    projectDescription: {
-        fontSize: 14,
-        color: '#666',
-    },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
+  container: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: '#f5f5f5',
+  },
+  header: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  listContainer: {
+    paddingBottom: 20,
+  },
+  projectItem: {
+    backgroundColor: 'white',
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+  },
+  projectName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  projectDescription: {
+    fontSize: 14,
+    color: '#666',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });
 
 export default ProjectList;
