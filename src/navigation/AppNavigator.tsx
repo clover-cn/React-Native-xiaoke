@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BackHandler, ToastAndroid, DeviceEventEmitter } from 'react-native';
+import {
+  BackHandler,
+  ToastAndroid,
+} from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import AuthNavigator from './AuthNavigator';
@@ -7,18 +10,20 @@ import MainTabNavigator from './MainTabNavigator';
 import ScanScreen from '../screens/ScanScreen';
 import { RootStackParamList } from './types';
 import { useScan } from '../contexts/ScanContext';
-import { NAVIGATION_EVENTS } from '../services/navigationService';
 import { getToken } from '../utils/interceptors';
+import ProjectList from '../screens/projectList';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
 const AppNavigator: React.FC = () => {
   const { isScanning, stopScan, onScanCancel } = useScan();
   const lastBackPressed = useRef<number | null>(null);
-  
+
   // 检查初始登录状态
-  const [initialRouteName, setInitialRouteName] = useState<keyof RootStackParamList | null>(null);
-  
+  const [initialRouteName, setInitialRouteName] = useState<
+    keyof RootStackParamList | null
+  >(null);
+
   useEffect(() => {
     // 检查是否有token来决定初始路由
     const token = getToken();
@@ -53,7 +58,7 @@ const AppNavigator: React.FC = () => {
 
     const backHandler = BackHandler.addEventListener(
       'hardwareBackPress',
-      backAction
+      backAction,
     );
 
     return () => backHandler.remove();
@@ -79,6 +84,25 @@ const AppNavigator: React.FC = () => {
           gestureEnabled: false,
         }}
       />
+      <Stack.Screen
+        name="ProjectList"
+        component={ProjectList}
+        options={{
+          presentation: 'card',
+          headerShown: true,
+          title: '选择项目',
+          headerStyle: {
+            backgroundColor: '#6200ea',
+            elevation: 4,
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: '500',
+            fontSize: 20,
+          },
+          headerTitleAlign: 'center', // left | center
+        }}
+      />
     </Stack.Navigator>
   );
 };
@@ -92,20 +116,20 @@ export const useMainScreenBackHandler = () => {
     React.useCallback(() => {
       const backAction = () => {
         const state = navigation.getState();
-        
+
         // 安全检查 state 和相关属性
         if (!state || !state.routes || state.index === undefined) {
           return false;
         }
-        
+
         const currentRoute = state.routes[state.index];
-        
+
         // 如果当前在Tab Navigator中
         if (currentRoute?.name === 'Main' && currentRoute.state) {
           const tabState = currentRoute.state;
           if (tabState.routes && tabState.index !== undefined) {
             const currentTab = tabState.routes[tabState.index];
-            
+
             // 如果不在首页，先跳转到首页
             if (currentTab?.name !== 'Home') {
               navigation.navigate('Main', { screen: 'Home' });
@@ -130,11 +154,11 @@ export const useMainScreenBackHandler = () => {
 
       const backHandler = BackHandler.addEventListener(
         'hardwareBackPress',
-        backAction
+        backAction,
       );
 
       return () => backHandler.remove();
-    }, [navigation])
+    }, [navigation]),
   );
 };
 

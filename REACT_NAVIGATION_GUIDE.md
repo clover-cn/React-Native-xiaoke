@@ -239,6 +239,293 @@ navigation.replace('Main', { screen: 'Home' });
 navigation.push('Main');
 ```
 
+## 🎭 页面呈现方式与样式配置
+
+### 1. 页面呈现方式 (Presentation)
+
+React Navigation 提供了多种页面呈现方式，每种方式都有不同的用户体验。
+
+#### Card 呈现 (默认)
+```typescript
+<Stack.Screen
+  name="ProjectList"
+  component={ProjectList}
+  options={{
+    presentation: 'card', // 默认值
+    headerShown: true,
+    title: '项目列表'
+  }}
+/>
+```
+
+**特点**:
+- 🔄 从右侧滑入（iOS）或淡入（Android）
+- 📱 与其他页面在同一层级
+- ⬅️ 通常显示返回按钮（<）
+- ✅ 适合长期浏览、多层级导航
+
+#### Modal 呈现
+```typescript
+<Stack.Screen
+  name="ProjectList"
+  component={ProjectList}
+  options={{
+    presentation: 'modal',
+    headerShown: true,
+    title: '选择项目'
+  }}
+/>
+```
+
+**特点**:
+- ⬆️ 从底部向上滑入
+- 🔝 覆盖在当前页面之上
+- ❌ 通常显示关闭按钮（×）而不是返回按钮
+- 👆 支持下拉关闭手势
+- ✅ 适合快速选择、确认操作、临时输入
+
+#### 使用场景对比
+
+| 使用场景 | Card | Modal |
+|---------|------|-------|
+| 项目列表浏览 | ✅ 适合长期浏览 | ❌ 不太适合 |
+| 快速项目选择 | ⚠️ 可以但不够直观 | ✅ 更符合直觉 |
+| 多级项目分类 | ✅ 支持深层导航 | ❌ 不适合嵌套 |
+| 临时选择操作 | ⚠️ 感觉太重 | ✅ 轻量级体验 |
+
+### 2. 标题栏样式配置
+
+#### 基础样式配置
+```typescript
+<Stack.Screen
+  name="ProjectList"
+  component={ProjectList}
+  options={{
+    presentation: 'card',
+    headerShown: true,
+    title: '选择项目',
+    
+    // === 背景和颜色 ===
+    headerStyle: {
+      backgroundColor: '#6200ea',          // 标题栏背景色
+      elevation: 4,                        // Android 阴影
+      shadowOpacity: 0.3,                  // iOS 阴影
+      shadowOffset: { width: 0, height: 2 },
+      shadowRadius: 4,
+    },
+    headerTintColor: '#fff',               // 返回按钮和图标颜色
+    
+    // === 标题样式 ===
+    headerTitleStyle: {
+      fontWeight: 'bold',                  // 字体粗细
+      fontSize: 18,                        // 字体大小
+      color: '#fff',                       // 标题文字颜色
+      fontFamily: 'System',                // 字体家族
+    },
+    headerTitleAlign: 'center',            // 标题对齐: 'left' | 'center'
+    
+    // === 返回按钮自定义 ===
+    headerBackTitleVisible: false,         // 隐藏返回按钮文字(iOS)
+    headerBackTitle: '返回',               // 自定义返回按钮文字
+  }}
+/>
+```
+
+#### 自定义标题组件
+```typescript
+<Stack.Screen
+  name="ProjectList"
+  component={ProjectList}
+  options={({ navigation, route }) => ({
+    presentation: 'card',
+    headerShown: true,
+    
+    // 自定义标题组件
+    headerTitle: () => (
+      <View style={styles.customHeader}>
+        <Text style={styles.headerTitle}>选择项目</Text>
+        <Text style={styles.headerSubtitle}>请选择一个项目</Text>
+      </View>
+    ),
+    
+    // 自定义左侧按钮
+    headerLeft: () => (
+      <TouchableOpacity
+        style={styles.headerButton}
+        onPress={() => navigation.goBack()}
+      >
+        <Text style={styles.buttonText}>取消</Text>
+      </TouchableOpacity>
+    ),
+    
+    // 自定义右侧按钮
+    headerRight: () => (
+      <TouchableOpacity
+        style={styles.headerButton}
+        onPress={() => console.log('更多操作')}
+      >
+        <Text style={styles.buttonText}>更多</Text>
+      </TouchableOpacity>
+    ),
+    
+    headerStyle: {
+      backgroundColor: '#f8f9fa',
+      elevation: 2,
+    },
+  })}
+/>
+```
+
+#### 主题风格预设
+
+**Material Design 风格**
+```typescript
+options={{
+  presentation: 'card',
+  headerShown: true,
+  title: '选择项目',
+  headerStyle: {
+    backgroundColor: '#6200ea',
+    elevation: 4,
+  },
+  headerTintColor: '#fff',
+  headerTitleStyle: {
+    fontWeight: '500',
+    fontSize: 20,
+  },
+  headerTitleAlign: 'left', // Material Design 通常左对齐
+}}
+```
+
+**iOS 风格**
+```typescript
+options={{
+  presentation: 'card',
+  headerShown: true,
+  title: '选择项目',
+  headerStyle: {
+    backgroundColor: '#f8f9fa',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 3,
+  },
+  headerTintColor: '#007AFF',
+  headerTitleStyle: {
+    fontWeight: '600',
+    fontSize: 17,
+    color: '#000',
+  },
+  headerTitleAlign: 'center', // iOS 通常居中对齐
+}}
+```
+
+#### 渐变背景标题栏
+```typescript
+import LinearGradient from 'react-native-linear-gradient';
+
+options={{
+  presentation: 'card',
+  headerShown: true,
+  headerTitle: () => (
+    <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>
+      选择项目
+    </Text>
+  ),
+  headerBackground: () => (
+    <LinearGradient
+      colors={['#667eea', '#764ba2']}
+      style={{ flex: 1 }}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 0 }}
+    />
+  ),
+  headerTintColor: '#fff',
+}}
+```
+
+#### 样式类示例
+```typescript
+const styles = StyleSheet.create({
+  customHeader: {
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  headerSubtitle: {
+    fontSize: 12,
+    color: '#666',
+  },
+  headerButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  buttonText: {
+    color: '#007AFF',
+    fontSize: 16,
+  },
+});
+```
+
+### 3. 添加新页面到导航系统
+
+要在现有项目中添加新页面，需要执行以下步骤：
+
+#### 步骤1：更新类型定义
+```typescript
+// src/navigation/types.ts
+export type RootStackParamList = {
+  Auth: undefined;
+  Main: { screen?: keyof MainTabParamList; params?: any } | undefined;
+  Scan: { onResult?: (data: string) => void; onCancel?: () => void };
+  ProjectList: undefined; // 添加新页面类型
+};
+```
+
+#### 步骤2：在导航器中注册
+```typescript
+// src/navigation/AppNavigator.tsx
+import ProjectList from '../screens/projectList'; // 导入页面组件
+
+<Stack.Navigator
+  initialRouteName={initialRouteName}
+  screenOptions={{ headerShown: false }}
+>
+  <Stack.Screen name="Auth" component={AuthNavigator} />
+  <Stack.Screen name="Main" component={MainTabNavigator} />
+  <Stack.Screen
+    name="ProjectList"
+    component={ProjectList}
+    options={{
+      presentation: 'modal',  // 或 'card'
+      headerShown: true,
+      title: '选择项目',
+      headerStyle: {
+        backgroundColor: '#6200ea',
+      },
+      headerTintColor: '#fff',
+    }}
+  />
+  <Stack.Screen name="Scan" component={ScanScreen} />
+</Stack.Navigator>
+```
+
+#### 步骤3：使用导航
+```typescript
+// 在任何组件中使用
+import { useNavigation } from '@react-navigation/native';
+import { navigate } from '../services/navigationService';
+
+// 方法1：使用 hook
+const navigation = useNavigation();
+navigation.navigate('ProjectList');
+
+// 方法2：使用全局服务
+navigate('ProjectList');
+```
+
 ## 🛠 项目实际应用
 
 ### 登录流程

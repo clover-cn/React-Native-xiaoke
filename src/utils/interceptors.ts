@@ -9,6 +9,20 @@ import { navigationRef } from '../services/navigationService';
 // token 键名（局部常量，按需跨模块可提升至 Common.ts）
 const TOKEN_KEY = 'APP_AUTH_TOKEN';
 
+class BusinessError<T = unknown> extends Error {
+  public code: number;
+
+  public payload: T;
+
+  constructor(code: number, message: string, payload: T) {
+    super(message);
+    this.name = 'BusinessError';
+    this.code = code;
+    this.payload = payload;
+    Object.setPrototypeOf(this, BusinessError.prototype);
+  }
+}
+
 // 设置 token（同步）
 export const setToken = (token: string): void => {
   storage.set(TOKEN_KEY, token);
@@ -89,7 +103,8 @@ const commonResponseInterceptor = async (
     // ToastAndroid.show('再按一次退出应用', ToastAndroid.SHORT);
     // 处理业务错误码
     if (data.code && data.code != 200 && data.code != 0) {
-      console.warn('⚠️ Business Error:', data.message || 'Unknown error');
+      const businessMessage = data.message || data.msg || 'Unknown error';
+      console.warn('⚠️ Business Error:', businessMessage);
 
       // 根据错误码进行不同处理
       switch (data.code) {
@@ -115,13 +130,16 @@ const commonResponseInterceptor = async (
           Alert.alert('提示', '服务器内部错误，请稍后重试');
           break;
         default:
-          if (data.message || data.msg) {
-            Alert.alert('提示', data.message || data.msg);
+          if (businessMessage) {
+            Alert.alert('提示', businessMessage);
           }
       }
+
+      throw new BusinessError(data.code, businessMessage, data);
     }
   } catch (error) {
     console.log('响应不是JSON格式');
+    throw error;
   }
 
   return response;
@@ -161,8 +179,7 @@ const errorInterceptor = async (error: Error): Promise<never> => {
   }
 
   // 显示错误提示
-  Alert.alert('网络错误', errorMessage);
-
+  ToastAndroid.show(errorMessage, ToastAndroid.SHORT);
   throw error;
 };
 

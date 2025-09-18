@@ -3,6 +3,7 @@ export type RootStackParamList = {
   Auth: undefined;
   Main: { screen?: keyof MainTabParamList; params?: any } | undefined;
   Scan: { onResult?: (data: string) => void; onCancel?: () => void };
+  ProjectList: undefined;
 };
 
 export type MainTabParamList = {

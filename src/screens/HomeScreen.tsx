@@ -18,6 +18,7 @@ import { Images } from '../assets/images';
 import LinearGradient from 'react-native-linear-gradient'; // 导入 LinearGradient
 import { useScan } from '../contexts/ScanContext';
 import { useMainScreenBackHandler } from '../navigation/AppNavigator';
+import { navigate } from '../services/navigationService';
 import apiService, { User, Device, LoginParams } from '../services/api';
 const { width } = Dimensions.get('window');
 const COMMON_IMG_ASPECT_RATIO = 106 / 670; // 图片实际宽高比
@@ -128,25 +129,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
 
   // 页面加载时获取项目列表
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res: any = await apiService.getDeviceList();
-        if (cancelled) return;
-        console.log('获取项目列表', res);
-        if (res.projects.length > 0) {
-          console.log('开始设置当前项目为第一个:', res.projects[0]);
-        } else if (res.projects.length <= 0) {
-          console.warn('项目为空');
-        }
-      } catch (e) {
-        if (cancelled) return;
-        console.error(e);
-      }
-    })();
-    return () => {
-      cancelled = true; // 防止卸载后 setState
-    };
+    projectList();
   }, []);
   // 顶部状态栏样式：在顶部使用“透明 + 浅色字”，下滑后使用“白底 + 深色字”
   // 为避免切 translucent 导致的重布局卡顿，translucent 固定 true，仅通过覆盖层透明度 + barStyle 切换
@@ -162,8 +145,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
 
   const handleTitlePress = () => {
     console.log('项目选择被点击');
-    // 这里可以打开项目选择弹窗
-    commonDevice.forEach;
+    // 转跳projectList页面
+    navigate('ProjectList');
   };
 
   const handleMessagePress = (message: any) => {
@@ -204,6 +187,23 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
     // 比如跳转到相应设备、显示结果等
   };
 
+  const [projectName, setProjectName] = useState<string>('暂无项目'); // 当前项目名称
+  // 获取项目列表
+  const projectList = async () => {
+    try {
+      const res: any = await apiService.getDeviceList();
+      console.log('获取项目列表', res);
+      if (res.projects.length > 0) {
+        console.log('开始设置当前项目为第一个:', res.projects[0]);
+        setProjectName(res.projects[0].projectName);
+      } else if (res.projects.length <= 0) {
+        console.warn('项目为空');
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       {/* 页面内容 */}
@@ -218,7 +218,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
       >
         {/* 自定义Header */}
         <HomeHeader
-          projectName="test_01"
+          projectName={projectName}
           onTitlePress={handleTitlePress}
           statusBarTranslucent={true}
           statusBarBgColor="#FF752A"
