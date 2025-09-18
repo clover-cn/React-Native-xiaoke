@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  FlatList,
   StyleSheet,
-  TouchableOpacity,
 } from 'react-native';
 import apiService from '../services/api';
+import RadioGroup from '../components/RadioGroup';
+import Radio from '../components/Radio';
 interface Project {
   projectId: string;
   groupName: string;
@@ -15,6 +15,7 @@ interface Project {
 
 const ProjectList: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
+  const [selectedProjectId, setSelectedProjectId] = useState<string>('');
 
   useEffect(() => {
     projectList();
@@ -31,8 +32,9 @@ const ProjectList: React.FC = () => {
         console.log('开始设置当前项目为第一个:', res.projects[0]);
         setLoading(false);
         setProjectListData(res.projects);
+        // 默认选中第一个项目
+        setSelectedProjectId(res.projects[0].projectId);
       } else if (res.projects.length <= 0) {
-
         console.warn('项目为空');
       }
     } catch (e) {
@@ -40,30 +42,35 @@ const ProjectList: React.FC = () => {
     }
   };
 
-  const renderItem = ({ item }: { item: Project }) => (
-    <TouchableOpacity style={styles.projectItem}>
-      <Text style={styles.projectName}>{item.projectName}</Text>
-      <Text style={styles.projectDescription}>{item.projectId}</Text>
-    </TouchableOpacity>
-  );
+  // 处理项目选择变化
+  const handleSelectionChange = (value: string) => {
+    setSelectedProjectId(value);
+    const selectedItem = projectListData.find(item => item.projectId === value);
+    console.log('选中项目:', selectedItem);
+    // 这里可以添加其他逻辑，比如保存到本地存储或发送到服务器
+  };
 
   return (
     <View style={styles.container}>
-      {/* <TouchableOpacity>
-        <Text style={styles.header}>项目列表</Text>
-      </TouchableOpacity> */}
+      {/* <Text style={styles.header}>选择项目</Text> */}
       {loading ? (
         <View style={styles.loadingContainer}>
-          <Text>Loading projects...</Text>
+          <Text>加载项目中...</Text>
         </View>
       ) : (
-        <FlatList
-          data={projectListData}
-          renderItem={renderItem}
-          keyExtractor={item => item.projectId}
-          contentContainerStyle={styles.listContainer}
-          showsVerticalScrollIndicator={false} // 隐藏垂直滚动条
-        />
+        <RadioGroup
+          selectedValue={selectedProjectId}
+          onSelectionChange={handleSelectionChange}
+          color="#ff600a"
+          style={styles.radioGroupContainer}
+        >
+          {projectListData.map((item) => (
+            <View key={item.projectId} style={styles.contentList}>
+              <Text style={styles.projectName}>{item.projectName}</Text>
+              <Radio value={item.projectId} />
+            </View>
+          ))}
+        </RadioGroup>
       )}
     </View>
   );
@@ -79,29 +86,32 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 16,
+    color: '#333',
+    textAlign: 'center',
   },
-  listContainer: {
-    paddingBottom: 20,
+  radioGroupContainer: {
+    paddingVertical: 8,
   },
-  projectItem: {
-    backgroundColor: 'white',
-    padding: 16,
+  contentList: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginVertical: 4,
     borderRadius: 8,
-    marginBottom: 12,
-    elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   projectName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  projectDescription: {
-    fontSize: 14,
-    color: '#666',
+    flex: 1,
+    fontSize: 16,
+    color: '#333333',
+    fontWeight: '500',
   },
   loadingContainer: {
     flex: 1,

@@ -17,9 +17,14 @@ import { setToken } from '../utils/http';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import type { RootStackParamList } from '../navigation/types';
 import { navigateToHome } from '../services/navigationService';
+import Radio from '../components/Radio';
+
 const { width } = Dimensions.get('window');
 
-type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Auth'>;
+type LoginScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  'Auth'
+>;
 
 const NAV_BAR_HEIGHT = 200;
 
@@ -46,8 +51,9 @@ const LoginScreen: React.FC = () => {
     }
     console.log('登录');
     // 模拟存储token
-    let token= 'eyJhbGciOiJIUzUxMiJ9.eyJ1c2VfZW5kIjoiTUVNQkVSX0EiLCJ1c2VyX2lkIjoxODM5MTQwOTg2MjUwMzEzNzI4LCJ1c2VyX2tleSI6IjE4MzkxNDA5ODYyNTAzMTM3MjgtYjgyMTk2ZjUtN2I1Zi00ZmZmLTg3M2MtMGM1OTIwNWRhMjcwIiwidXNlcm5hbWUiOiLnp6blp4vnmocifQ.CtvoE5dwEJbZ69QkGE5YEC8opEq2-D1bKr0_Ro9SyuWlNOXAR1_L-xyZBJu1thWGwXCqI1R0Je0T-gcpa049LA'
-    setToken(token)
+    let token =
+      'eyJhbGciOiJIUzUxMiJ9.eyJ1c2VfZW5kIjoiTUVNQkVSX0EiLCJ1c2VyX2lkIjoxODM5MTQwOTg2MjUwMzEzNzI4LCJ1c2VyX2tleSI6IjE4MzkxNDA5ODYyNTAzMTM3MjgtNWJiMzc1NzItZDM2Yy00ZWI5LThjOWYtZWIxYjM1NGRjNzM5IiwidXNlcm5hbWUiOiLnp6blp4vnmocifQ.gw1vOeKAbbrHIiDS2OCkIfGg7HdtMQf5PQ-QYpz3DqvgLp-kIiUYQlAnTYxS9Qd46lWIXf5O67N1yhbj1_N2sw';
+    setToken(token);
     // 使用React Navigation跳转到主页面
     navigation.reset({
       index: 0,
@@ -56,8 +62,13 @@ const LoginScreen: React.FC = () => {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
-      <View style={[styles.headerWrapper, { height: headerHeight + extraPadding }]}
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={{ paddingBottom: 24 }}
+      showsVerticalScrollIndicator={false}
+    >
+      <View
+        style={[styles.headerWrapper, { height: headerHeight + extraPadding }]}
       >
         <CustomHeader
           backgroundImage={require('../../assets/images/img_my_bg.png')}
@@ -69,7 +80,7 @@ const LoginScreen: React.FC = () => {
         {/* 覆盖在 Header 上的内容 */}
         <View
           style={[styles.overlayContent, { top: overlayTop }]}
-          onLayout={(e) => setCardHeight(e.nativeEvent.layout.height)}
+          onLayout={e => setCardHeight(e.nativeEvent.layout.height)}
         >
           <View style={styles.card}>
             {/* 顶部头像 */}
@@ -97,8 +108,7 @@ const LoginScreen: React.FC = () => {
               </View>
 
               {/* 验证码 */}
-              <View style={[styles.inputRow, { marginTop: 16 }]}
-              >
+              <View style={[styles.inputRow, { marginTop: 16 }]}>
                 <View style={styles.inputIcon} />
                 <TextInput
                   style={[styles.input, { flex: 1 }]}
@@ -108,19 +118,25 @@ const LoginScreen: React.FC = () => {
                   value={code}
                   onChangeText={setCode}
                 />
-                <TouchableOpacity onPress={handleSendCode} activeOpacity={0.8}
+                <TouchableOpacity
+                  onPress={handleSendCode}
+                  activeOpacity={0.8}
                   style={{ marginLeft: 8 }}
                 >
-                  <View style={styles.codeButton} >
+                  <View style={styles.codeButton}>
                     <Text style={styles.codeButtonText}>发送验证码</Text>
                   </View>
                 </TouchableOpacity>
               </View>
 
               {/* 登录按钮 */}
-              <TouchableOpacity onPress={handleLogin} activeOpacity={0.85} style={{ marginTop: 24 }}>
+              <TouchableOpacity
+                onPress={handleLogin}
+                activeOpacity={0.85}
+                style={{ marginTop: 24 }}
+              >
                 <LinearGradient
-                  colors={["#FF8A00", "#FF5E00"]}
+                  colors={['#FF8A00', '#FF5E00']}
                   start={{ x: 0, y: 0.5 }}
                   end={{ x: 1, y: 0.5 }}
                   style={[styles.loginButton, { opacity: agree ? 1 : 0.5 }]}
@@ -135,14 +151,16 @@ const LoginScreen: React.FC = () => {
                 activeOpacity={0.8}
                 style={styles.agreementRow}
               >
-                <View style={[styles.checkbox, agree && styles.checkboxChecked]}>
-                  {agree && <Text style={styles.checkboxIcon}>✓</Text>}
-                </View>
+                <Radio
+                  value="agree"
+                  checked={agree}
+                  onPress={() => setAgree(!agree)}
+                  size={18}
+                />
 
                 <Text style={styles.agreementText}>
                   我同意小程序使用我所提交的信息用于账户开通，并已查看
-                  <Text style={styles.link}>《用户服务协议》</Text>
-                  及
+                  <Text style={styles.link}>《用户服务协议》</Text>及
                   <Text style={styles.link}>《个人信息保护政策》</Text>
                 </Text>
               </TouchableOpacity>
@@ -253,23 +271,6 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginTop: 16,
   },
-  checkbox: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 2,
-    borderColor: '#FF6B35',
-    marginRight: 8,
-  },
-  checkboxChecked: {
-    backgroundColor: '#FF6B35',
-  },
-  checkboxIcon: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    textAlign: 'center',
-    lineHeight: 14,
-  },
   agreementText: {
     flex: 1,
     color: '#4A4A4A',
@@ -282,4 +283,3 @@ const styles = StyleSheet.create({
 });
 
 export default LoginScreen;
-
