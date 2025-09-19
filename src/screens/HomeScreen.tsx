@@ -22,6 +22,8 @@ import { useScan } from '../contexts/ScanContext';
 import { useMainScreenBackHandler } from '../navigation/AppNavigator';
 import { navigate } from '../services/navigationService';
 import apiService, { User, Device, LoginParams } from '../services/api';
+import { computeNumber } from '../utils/Common';
+import { AccountInfo } from '../types/apiTypes';
 const { width } = Dimensions.get('window');
 const COMMON_IMG_ASPECT_RATIO = 106 / 670; // 图片实际宽高比
 const calculatedImageHeight = (width - 40) * COMMON_IMG_ASPECT_RATIO;
@@ -39,10 +41,10 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   const { theme } = useTheme();
   const { startScan } = useScan();
   const insets = useSafeAreaInsets(); // 获取安全区域边距
-  
+
   // 页面焦点状态
   const [isFocused, setIsFocused] = useState(false);
-  
+
   // 监听页面焦点状态(页面聚焦/失焦)
   useFocusEffect(
     useCallback(() => {
@@ -53,7 +55,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
         console.log('HomeScreen 失去焦点');
         setIsFocused(false);
       };
-    }, [])
+    }, []),
   );
 
   // 使用React Navigation的返回键处理
@@ -210,7 +212,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
       if (res.projects.length > 0) {
         console.log('开始设置当前项目为第一个:', res.projects[0]);
         setProjectName(res.projects[0].projectName);
-        switchProject(res.projects[0].projectId)
+        switchProject(res.projects[0].projectId);
       } else if (res.projects.length <= 0) {
         console.warn('项目为空');
       }
@@ -218,29 +220,56 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
       console.error(e);
     }
   };
+  const [AccountInfo, setAccountInfo] = useState({
+    curBalanceFee: '0.00',
+    num: '0',
+  }); // 账户信息
   // 切换项目
-  const switchProject = async (projectId:string) => {
+  const switchProject = async (projectId: string) => {
     try {
-      let res = await apiService.switchProject(projectId)
-      if (res.ok) {
-        console.log('切换项目成功');
-        let projectInfo = await apiService.getProjectInfo()
-        console.log('获取项目信息', projectInfo);
-        let userInfo = await apiService.getAccountInfo()
-        console.log('获取用户信息', userInfo);
-        let couponInfo = await apiService.getCouponInfo()
-        console.log('获取优惠券信息', couponInfo);
-        let featureToggle = await apiService.getFeatureToggle()
-        console.log('获取功能开关', featureToggle);
-      }
-    } catch (error) {
+      const res = await apiService.switchProject(projectId);
+      if (!res.ok) return;
+
+      console.log('切换项目成功');
+
+      void apiService
+        .getProjectInfo()
+        .then(p => console.log('获取项目信息', p))
+        .catch(() => {});
+
+      void apiService
+        .getAccountInfo()
+        .then(u => {
+          console.log('用户账户信息', u);
+          setAccountInfo(prev => ({
+            ...prev,
+            curBalanceFee: computeNumber(u.curBalanceFee, '/', 1000)
+              .result as string,
+          }));
+        })
+        .catch(() => {});
+
+      void apiService
+        .getCouponInfo()
+        .then(c => {
+          setAccountInfo(prev => ({
+            ...prev,
+            num: c.num,
+          }));
+        })
+        .catch(() => {});
+
+      void apiService
+        .getFeatureToggle()
+        .then(f => console.log('获取功能开关', f))
+        .catch(() => {});
+    } catch {
       ToastAndroid.show('切换项目失败', ToastAndroid.SHORT);
     }
-  }
-  // 获取项目信息
-  const getProjectInfo = async () => {
+  };
 
-  }
+  // 获取项目信息
+  const getProjectInfo = async () => {};
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       {/* 页面内容 */}
@@ -307,7 +336,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
               <Text
                 style={[styles.textStyle, styles.textWeight, styles.testSize]}
               >
-                100.00
+                {AccountInfo.curBalanceFee}
               </Text>
               <Text style={styles.textStyle}>余额(元)</Text>
             </View>
@@ -322,7 +351,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
               <Text
                 style={[styles.textStyle, styles.textWeight, styles.testSize]}
               >
-                0
+                {AccountInfo.num}
               </Text>
               <Text style={styles.textStyle}>优惠券</Text>
             </View>

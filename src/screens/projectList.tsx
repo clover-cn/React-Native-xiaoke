@@ -35,7 +35,7 @@ const ProjectList: React.FC = () => {
         setLoading(false);
         setProjectListData(res.projects);
         // 默认选中第一个项目
-        // setSelectedProjectId(res.projects[0].projectId);
+        setSelectedProjectId(res.projects[0].projectId);
       } else if (res.projects.length <= 0) {
         console.warn('项目为空');
       }
