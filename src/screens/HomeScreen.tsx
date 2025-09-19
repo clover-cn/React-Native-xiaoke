@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Dimensions,
   StatusBar,
+  ToastAndroid,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
@@ -209,6 +210,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
       if (res.projects.length > 0) {
         console.log('开始设置当前项目为第一个:', res.projects[0]);
         setProjectName(res.projects[0].projectName);
+        switchProject(res.projects[0].projectId)
       } else if (res.projects.length <= 0) {
         console.warn('项目为空');
       }
@@ -216,7 +218,29 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
       console.error(e);
     }
   };
+  // 切换项目
+  const switchProject = async (projectId:string) => {
+    try {
+      let res = await apiService.switchProject(projectId)
+      if (res.ok) {
+        console.log('切换项目成功');
+        let projectInfo = await apiService.getProjectInfo()
+        console.log('获取项目信息', projectInfo);
+        let userInfo = await apiService.getAccountInfo()
+        console.log('获取用户信息', userInfo);
+        let couponInfo = await apiService.getCouponInfo()
+        console.log('获取优惠券信息', couponInfo);
+        let featureToggle = await apiService.getFeatureToggle()
+        console.log('获取功能开关', featureToggle);
+      }
+    } catch (error) {
+      ToastAndroid.show('切换项目失败', ToastAndroid.SHORT);
+    }
+  }
+  // 获取项目信息
+  const getProjectInfo = async () => {
 
+  }
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       {/* 页面内容 */}

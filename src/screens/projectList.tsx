@@ -28,14 +28,14 @@ const ProjectList: React.FC = () => {
   const [projectListData, setProjectListData] = useState<Project[]>([]);
   const projectList = async () => {
     try {
-      const res: any = await apiService.getDeviceList();
-      console.log('获取项目列表', res);
+      const res = await apiService.getDeviceList();
+      console.log('获取项目列表', res.projects);
       if (res.projects.length > 0) {
         console.log('开始设置当前项目为第一个:', res.projects[0]);
         setLoading(false);
         setProjectListData(res.projects);
         // 默认选中第一个项目
-        setSelectedProjectId(res.projects[0].projectId);
+        // setSelectedProjectId(res.projects[0].projectId);
       } else if (res.projects.length <= 0) {
         console.warn('项目为空');
       }

@@ -1,6 +1,12 @@
 import httpClient from '../utils/request';
 import { drsClient, backupClient } from '../utils/interceptors';
-
+import {
+  ProjectInfo,
+  AccountInfo,
+  CouponInfo,
+  FeatureToggle,
+  DeviceList,
+} from '../types/apiTypes';
 // 用户相关接口
 export interface User {
   id: string;
@@ -58,7 +64,10 @@ export interface StartChargeParams {
 class ApiService {
   // 用户认证相关
   async login(params: LoginParams): Promise<LoginResponse> {
-    const response = await httpClient.post<LoginResponse>('/auth/login', params);
+    const response = await httpClient.post<LoginResponse>(
+      '/auth/login',
+      params,
+    );
     return response.data;
   }
 
@@ -69,17 +78,66 @@ class ApiService {
   /**
    * 获取项目列表
    */
-  async getDeviceList(): Promise<Device[]> {
-    const response = await httpClient.get<Device[]>('/members/user/project/all');
+  async getDeviceList(): Promise<DeviceList> {
+    const response = await httpClient.get<DeviceList>(
+      '/members/user/project/all',
+    );
     return response.data;
   }
   /**
    * 切换项目
    * -URL: /members/user/project/switch
-   * @param projectId 项目ID 
+   * @param projectId 项目ID
    */
-  async switchProject(projectId: string): Promise<{ ok: boolean; msg: string }> {
-    const response = await httpClient.get('/members/user/project/switch', { params: { projectId } });
+  async switchProject(
+    projectId: string,
+  ): Promise<{ ok: boolean; msg: string }> {
+    const response = await httpClient.get('/members/user/project/switch', {
+      params: { projectId },
+    });
+    return response.data;
+  }
+  /**
+   * 获取项目信息
+   * -URL: /members/user/project/info
+   */
+  async getProjectInfo(): Promise<ProjectInfo> {
+    const response = await httpClient.get<ProjectInfo>(
+      '/members/user/project/info',
+    );
+    return response.data;
+  }
+  /**
+   * 获取用户账户信息
+   * -URL: /members/user/project/account
+   */
+  async getAccountInfo(): Promise<AccountInfo> {
+    const response = await httpClient.get<AccountInfo>(
+      '/members/user/project/account',
+    );
+    return response.data;
+  }
+  /**
+   * 获取优惠券信息
+   * -URL: /members/user/coupon/valid/num
+   */
+  async getCouponInfo(): Promise<CouponInfo> {
+    const response = await httpClient.get<CouponInfo>(
+      '/members/user/coupon/valid/num',
+    );
+    return response.data;
+  }
+  /**
+   * 获取功能开关
+   * -URL: /projects/setting/app/func/get
+   */
+  async getFeatureToggle(): Promise<FeatureToggle> {
+    const response = await httpClient.get<FeatureToggle>(
+      '/projects/setting/app/func/get',
+      {
+        params: { appType: '1' },
+      },
+    );
     return response.data;
   }
 
@@ -96,22 +154,27 @@ class ApiService {
     return response.data;
   }
 
-  async getBackupList(): Promise<Array<{ id: string; name: string; createdAt: string; size: number }>> {
+  async getBackupList(): Promise<
+    Array<{ id: string; name: string; createdAt: string; size: number }>
+  > {
     const response = await backupClient.get('/list');
     return response.data;
   }
 
   // 文件上传
   async uploadFile(file: FormData): Promise<{ url: string; filename: string }> {
-    const response = await httpClient.post<{ url: string; filename: string }>('/upload', file, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
+    const response = await httpClient.post<{ url: string; filename: string }>(
+      '/upload',
+      file,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       },
-    });
+    );
     return response.data;
   }
   // 示例结束
-
 }
 
 // 创建API服务实例
@@ -127,5 +190,5 @@ export const {
   getBluetoothStatus,
   createBackup,
   getBackupList,
-  uploadFile
+  uploadFile,
 } = apiService;
