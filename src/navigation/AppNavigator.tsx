@@ -3,7 +3,7 @@ import {
   BackHandler,
   ToastAndroid,
 } from 'react-native';
-import { createStackNavigator } from '@react-navigation/stack';
+import { CardStyleInterpolators, createStackNavigator } from '@react-navigation/stack';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import AuthNavigator from './AuthNavigator';
 import MainTabNavigator from './MainTabNavigator';
@@ -76,8 +76,9 @@ const AppNavigator: React.FC = () => {
         name="ProjectList"
         component={ProjectList}
         options={{
-          presentation: 'card',
+          presentation: 'transparentModal',
           headerShown: true,
+          // cardStyleInterpolator: CardStyleInterpolators.forNoAnimation, // 关闭退场/入场动画
           title: '切换项目',
           headerStyle: {
             backgroundColor: '#6200ea',
