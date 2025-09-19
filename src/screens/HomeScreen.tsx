@@ -46,7 +46,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   useFocusEffect(
     useCallback(() => {
       console.log('HomeScreen 获得焦点');
-      
+      projectList();
       setIsFocused(true);
       return () => {
         console.log('HomeScreen 失去焦点');
@@ -144,10 +144,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
     return () => clearInterval(timer);
   }, [messages.length]);
 
-  // 页面加载时获取项目列表
-  useEffect(() => {
-    projectList();
-  }, []);
   // 顶部状态栏样式：在顶部使用“透明 + 浅色字”，下滑后使用“白底 + 深色字”
   // 为避免切 translucent 导致的重布局卡顿，translucent 固定 true，仅通过覆盖层透明度 + barStyle 切换
   const [isScrolled, setIsScrolled] = useState(false);

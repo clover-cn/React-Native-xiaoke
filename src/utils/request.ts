@@ -11,6 +11,7 @@ export interface RequestConfig {
   headers?: Record<string, string>;
   timeout?: number;
   baseURL?: string;
+  params?: Record<string, any>; // 用于GET请求的查询参数
 }
 
 // 响应数据接口
@@ -108,13 +109,31 @@ class HttpClient {
     return { controller, timeoutId };
   }
 
+  // 构建查询字符串
+  private buildQueryString(params: Record<string, any>): string {
+    const searchParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== null && value !== undefined) {
+        searchParams.append(key, String(value));
+      }
+    });
+    return searchParams.toString();
+  }
+
   // 构建完整URL
-  private buildURL(url: string, baseURL?: string): string {
+  private buildURL(url: string, params?: Record<string, any>, baseURL?: string): string {
     const base = baseURL || this.baseURL;
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
+    let fullUrl = url.startsWith('http://') || url.startsWith('https://')
+      ? url
+      : `${base.replace(/\/$/, '')}/${url.replace(/^\//, '')}`;
+    
+    // 添加查询参数
+    if (params && Object.keys(params).length > 0) {
+      const queryString = this.buildQueryString(params);
+      fullUrl += (fullUrl.includes('?') ? '&' : '?') + queryString;
     }
-    return `${base.replace(/\/$/, '')}/${url.replace(/^\//, '')}`;
+    
+    return fullUrl;
   }
 
   // 核心请求方法
@@ -127,13 +146,14 @@ class HttpClient {
         url,
         method = 'GET',
         data,
+        params, // 新增params参数
         headers = {},
         timeout = this.timeout,
         baseURL,
       } = processedConfig;
 
       // 构建请求URL
-      const fullURL = this.buildURL(url, baseURL);
+      const fullURL = this.buildURL(url, params, baseURL);
 
       // 合并请求头
       const mergedHeaders = {

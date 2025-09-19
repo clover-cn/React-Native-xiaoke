@@ -66,9 +66,20 @@ class ApiService {
     await httpClient.post('/auth/logout');
   }
 
-  // 获取项目列表
+  /**
+   * 获取项目列表
+   */
   async getDeviceList(): Promise<Device[]> {
     const response = await httpClient.get<Device[]>('/members/user/project/all');
+    return response.data;
+  }
+  /**
+   * 切换项目
+   * -URL: /members/user/project/switch
+   * @param projectId 项目ID 
+   */
+  async switchProject(projectId: string): Promise<{ ok: boolean; msg: string }> {
+    const response = await httpClient.get('/members/user/project/switch', { params: { projectId } });
     return response.data;
   }
 

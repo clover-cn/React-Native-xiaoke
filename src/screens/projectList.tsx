@@ -3,10 +3,12 @@ import {
   View,
   Text,
   StyleSheet,
+  ToastAndroid,
 } from 'react-native';
 import apiService from '../services/api';
 import RadioGroup from '../components/RadioGroup';
 import Radio from '../components/Radio';
+import {goBack} from '../services/navigationService'
 interface Project {
   projectId: string;
   groupName: string;
@@ -43,11 +45,19 @@ const ProjectList: React.FC = () => {
   };
 
   // 处理项目选择变化
-  const handleSelectionChange = (value: string) => {
+  const handleSelectionChange = async (value: string) => {
     setSelectedProjectId(value);
-    const selectedItem = projectListData.find(item => item.projectId === value);
+    const selectedItem = projectListData.find(item => item.projectId === value)!;
     console.log('选中项目:', selectedItem);
-    // 这里可以添加其他逻辑，比如保存到本地存储或发送到服务器
+    try {
+      let res = await apiService.switchProject(selectedItem.projectId)
+      if (res.ok) {
+        console.log('切换项目成功');
+        goBack()
+      }
+    } catch (error) {
+      ToastAndroid.show('切换项目失败', ToastAndroid.SHORT);
+    }
   };
 
   return (
@@ -80,7 +90,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#f5f5f5',
+    // backgroundColor: '#f5f5f5',
+    backgroundColor: '#ffffff',
   },
   header: {
     fontSize: 24,
@@ -96,16 +107,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
     paddingHorizontal: 16,
     paddingVertical: 12,
     marginVertical: 4,
     borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    // backgroundColor: '#FFFFFF',
+    // shadowColor: '#000',
+    // shadowOffset: { width: 0, height: 1 },
+    // shadowOpacity: 0.1,
+    // shadowRadius: 2,
+    // elevation: 2,
   },
   projectName: {
     flex: 1,
