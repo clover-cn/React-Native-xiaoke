@@ -6,6 +6,7 @@ import {
   CouponInfo,
   FeatureToggle,
   DeviceList,
+  queryDeviceInfo,
 } from '../types/apiTypes';
 // 用户相关接口
 export interface User {
@@ -137,6 +138,28 @@ class ApiService {
       {
         params: { appType: '1' },
       },
+    );
+    return response.data;
+  }
+  /**
+   * 根据设备编号获取项目id
+   * -URL: /projects/appDevice/devNoGetProjectId
+   */
+  async getProjectID(devNo: string): Promise<string> {
+    const response = await httpClient.post<string>(
+      '/projects/appDevice/devNoGetProjectId',
+      { devNo },
+    );
+    return response.data;
+  }
+  /**
+   * 查看设备信息
+   * -URL: /projects/appDevice/queryDeviceInfo
+   */
+  async queryDeviceInfo(deviceNo: string): Promise<queryDeviceInfo> {
+    const response = await httpClient.post<queryDeviceInfo>(
+      '/projects/appDevice/queryDeviceInfo',
+      { deviceNo },
     );
     return response.data;
   }

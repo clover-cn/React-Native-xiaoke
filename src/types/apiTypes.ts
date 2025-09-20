@@ -84,3 +84,22 @@ export interface Projects {
   groupId: string;
   groupName: string;
 }
+
+export interface queryDeviceInfo {
+  addLiquidNo: any
+  buildingName: string
+  chargingType: string
+  dateTime: string
+  deviceGroupId: string
+  deviceNo: string
+  deviceStatus: string
+  enableWordTimeFrame: string
+  floorName: string
+  key: string
+  leftLiquidBind: boolean
+  mac: string
+  mainType: string
+  rightLiquidBind: boolean
+  roomName: string
+  secondType: any
+}

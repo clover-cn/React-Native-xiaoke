@@ -198,9 +198,64 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
 
   // 处理扫码结果的函数
   const handleScanResult = (data: string) => {
-    console.log('处理扫码结果:', data);
-    // 这里可以根据扫码结果进行相应的处理
-    // 比如跳转到相应设备、显示结果等
+    const result = data.trim();
+    console.log('扫码信息:', result);
+    if (result.startsWith('XYJ')) {
+      console.log('洗衣机码');
+      // 服务是否脱机
+      // if (app.globalData.isOffline) {
+      //   that.queryOnServiceDown(result)
+      //   return
+      // }
+      Scaninfo(result);
+      return;
+    }
+    const isPureNumber = /^[0-9]{15}$/.test(result);
+    if (isPureNumber) {
+      console.log('设备码');
+      // if (app.globalData.isOffline) {
+      //   that.queryOnServiceDown(result)
+      //   return
+      // }
+      Scaninfo(result);
+      return;
+    }
+    const tlis = result.split('=');
+    const imei = tlis[1].trim() || tlis[0].trim(); // 默认取 tlis[0]，如果 tlis[1] 未定义
+    if (!imei) {
+      console.log('请扫描正确二维码');
+
+      return;
+    }
+    if (imei.startsWith('xmm')) {
+      console.log('项目码');
+      if (imei.includes('&card')) {
+        // 卡注册方式 3卡注册 4合码注册
+        let card = imei.split('&')[1];
+        // app.globalData.mpInputParam.card = card.split('card')[1]
+      }
+      projectCode(imei);
+    } else if (imei.split('-')[1]) {
+      console.log(
+        '设备码带有标识',
+        '设备码:' + imei.split('-')[1],
+        '标识：' + imei.split('-')[0],
+      );
+      // app消费的来源-0:(默认)扫屏幕码进入消费,1:从打印的静态码进入消费, 2:常用设备进入消费进入消费
+      // app.globalData.imeiType = imei.split("-")[0] ? imei.split("-")[0] : '1'
+      // if (app.globalData.isOffline) {
+      //   that.queryOnServiceDown(imei.split("-")[1])
+      //   return
+      // }
+      Scaninfo(imei.split('-')[1]);
+    } else {
+      console.log('设备码:', imei);
+      // if (app.globalData.isOffline) {
+      //   that.queryOnServiceDown(imei)
+      //   return
+      // }
+      Scaninfo(imei);
+    }
   };
 
   const [projectName, setProjectName] = useState<string>('暂无项目'); // 当前项目名称
@@ -268,8 +323,33 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
     }
   };
 
-  // 获取项目信息
-  const getProjectInfo = async () => {};
+  // 扫码信息查询
+  const Scaninfo = async (result: string) => {
+    try {
+      // 根据设备编号获取项目id
+      let res = await getDevCode(result);
+      console.log('根据设备编号获取项目id', res);
+      let res2 = await apiService.queryDeviceInfo(result);
+      console.log('扫码信息查询', res2);
+    } catch (error) {
+      ToastAndroid.show('获取项目ID失败', ToastAndroid.SHORT);
+    }
+  };
+
+  // 项目码处理函数
+  const projectCode = async (code: string) => {};
+
+  // 根据设备编号获取项目id
+  const getDevCode = async (deviceCode: string) => {
+    try {
+      // 根据设备编号获取项目id
+      let res = await apiService.getProjectID(deviceCode);
+      console.log('根据设备编号获取项目id', res);
+    } catch (error) {
+      ToastAndroid.show('获取项目ID失败', ToastAndroid.SHORT);
+    }
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       {/* 页面内容 */}
