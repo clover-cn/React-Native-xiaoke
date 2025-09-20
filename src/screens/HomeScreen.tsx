@@ -327,8 +327,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   const Scaninfo = async (result: string) => {
     try {
       // 根据设备编号获取项目id
-      let res = await getDevCode(result);
-      console.log('根据设备编号获取项目id', res);
+      await getDevCode(result);
       let res2 = await apiService.queryDeviceInfo(result);
       console.log('扫码信息查询', res2);
     } catch (error) {
@@ -342,7 +341,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   // 根据设备编号获取项目id
   const getDevCode = async (deviceCode: string) => {
     try {
-      // 根据设备编号获取项目id
       let res = await apiService.getProjectID(deviceCode);
       console.log('根据设备编号获取项目id', res);
     } catch (error) {

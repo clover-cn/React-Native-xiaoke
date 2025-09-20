@@ -175,6 +175,24 @@ class HttpClient {
       if (data && method !== 'GET') {
         if (mergedHeaders['Content-Type']?.includes('application/json')) {
           fetchOptions.body = JSON.stringify(data);
+        } else if (mergedHeaders['Content-Type']?.includes('application/x-www-form-urlencoded')) {
+          // 自动处理 application/x-www-form-urlencoded 格式
+          if (typeof data === 'string') {
+            // 如果已经是字符串，直接使用
+            fetchOptions.body = data;
+          } else if (data instanceof URLSearchParams) {
+            // 如果是 URLSearchParams 实例，转换为字符串
+            fetchOptions.body = data.toString();
+          } else {
+            // 如果是普通对象，自动转换为 URLSearchParams 格式
+            const formData = new URLSearchParams();
+            Object.entries(data).forEach(([key, value]) => {
+              if (value !== null && value !== undefined) {
+                formData.append(key, String(value));
+              }
+            });
+            fetchOptions.body = formData.toString();
+          }
         } else if (data instanceof FormData) {
           fetchOptions.body = data;
           // FormData会自动设置Content-Type，需要删除手动设置的

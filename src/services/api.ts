@@ -149,6 +149,11 @@ class ApiService {
     const response = await httpClient.post<string>(
       '/projects/appDevice/devNoGetProjectId',
       { devNo },
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      },
     );
     return response.data;
   }
