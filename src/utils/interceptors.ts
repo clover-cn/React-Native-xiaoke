@@ -42,8 +42,6 @@ export const clearToken = (): void => {
 // 请求拦截器：添加认证token
 const authRequestInterceptor = (config: RequestConfig): RequestConfig => {
   const token = getToken();
-  console.log('获取到的 token:', token);
-
   if (token) {
     config.headers = {
       ...config.headers,
@@ -73,12 +71,7 @@ const commonRequestInterceptor = (config: RequestConfig): RequestConfig => {
 
 // 请求拦截器：日志记录
 const loggingRequestInterceptor = (config: RequestConfig): RequestConfig => {
-  console.log('🚀 Request:', {
-    url: config.url,
-    method: config.method,
-    headers: config.headers,
-    data: config.data,
-  });
+  console.log('🚀 请求拦截器日志记录:', config);
   return config;
 };
 
@@ -86,7 +79,7 @@ const loggingRequestInterceptor = (config: RequestConfig): RequestConfig => {
 const commonResponseInterceptor = async (
   response: Response,
 ): Promise<Response> => {
-  console.log('响应:', {
+  console.log('✅ 响应拦截器日志记录:', {
     url: response.url,
     status: response.status,
     statusText: response.statusText,
@@ -103,7 +96,7 @@ const commonResponseInterceptor = async (
 
   try {
     const data = await clonedResponse.json();
-    console.log('响应数据:', data);
+    // console.log('响应数据:', data);
 
     // 只处理成功HTTP响应中的业务错误码
     if (data.code && data.code != 200 && data.code != 0) {
