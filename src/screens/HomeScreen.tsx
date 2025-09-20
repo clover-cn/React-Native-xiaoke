@@ -279,6 +279,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
     curBalanceFee: '0.00',
     num: '0',
   }); // 账户信息
+
   // 切换项目
   const switchProject = async (projectId: string) => {
     try {
@@ -329,7 +330,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
       // 根据设备编号获取项目id
       await getDevCode(result);
       let res2 = await apiService.queryDeviceInfo(result);
-      console.log('扫码信息查询', res2);
+      console.log('设备信息：', res2);
+      navigate('Xiyu');
     } catch (error) {
       ToastAndroid.show('获取项目ID失败', ToastAndroid.SHORT);
     }

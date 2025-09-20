@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { BackHandler, ToastAndroid, StatusBar } from 'react-native';
 import {
-  BackHandler,
-  ToastAndroid,
-} from 'react-native';
-import { CardStyleInterpolators, createStackNavigator } from '@react-navigation/stack';
+  CardStyleInterpolators,
+  createStackNavigator,
+} from '@react-navigation/stack';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import AuthNavigator from './AuthNavigator';
 import MainTabNavigator from './MainTabNavigator';
@@ -12,6 +12,7 @@ import { RootStackParamList } from './types';
 import { useScan } from '../contexts/ScanContext';
 import { getToken } from '../utils/interceptors';
 import ProjectList from '../screens/projectList';
+import xiyu from '../screens/device/Xiyu';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -82,9 +83,30 @@ const AppNavigator: React.FC = () => {
           title: '切换项目',
           headerStyle: {
             backgroundColor: '#6200ea',
-            elevation: 4,
+            elevation: 2, // 分割线
           },
           headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: '500',
+            fontSize: 20,
+          },
+          headerTitleAlign: 'center', // left | center
+        }}
+      />
+      <Stack.Screen
+        name="Xiyu"
+        component={xiyu}
+        options={{
+          presentation: 'transparentModal',
+          headerShown: true,
+          // cardStyleInterpolator: CardStyleInterpolators.forNoAnimation, // 关闭退场/入场动画
+          title: '洗浴',
+          headerStyle: {
+            backgroundColor: '#FFFFFF',
+            elevation: 2, // 分割线
+            shadowColor: 'transparent',
+          },
+          headerTintColor: '#101010',
           headerTitleStyle: {
             fontWeight: '500',
             fontSize: 20,

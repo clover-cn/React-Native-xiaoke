@@ -223,9 +223,9 @@ const styles = StyleSheet.create({
     shadowColor: '#000000',
     shadowOpacity: 0.5,
     shadowOffset: { width: 0, height: 8 },
-    shadowRadius: 15,
+    shadowRadius: 8,
     // Android 阴影效果
-    elevation: 15,
+    elevation: 8,
     // 确保背景色不干扰阴影
     backgroundColor: 'transparent',
   },
