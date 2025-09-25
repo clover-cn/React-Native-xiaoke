@@ -494,7 +494,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                 <Text>{device.name}</Text>
               </View>
               <Text>{device.address}</Text>
-              <Text style={styles.usageText}>使用</Text>
+              <Text style={styles.usageText} onPress={() => {
+                handleScanResult('864814071027923');
+              }}>使用</Text>
             </View>
           ))}
         </View>
