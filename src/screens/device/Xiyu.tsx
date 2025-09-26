@@ -164,7 +164,7 @@ const Xiyu: React.FC = () => {
           </View>
           <Text>123456789</Text>
         </View>
-        <View style={[styles.footer, { paddingBottom: insets.bottom + 20 }]}>
+        <View style={[styles.footer, { paddingBottom: insets.bottom + 10 }]}>
           <Pressable onPress={start4GConsumption} style={styles.shadowWrap}>
             <LinearGradient
               colors={isState ? ['#FD3563', '#FE3547'] : ['#FF510A', '#FE8F0A']} // 对应的起始和结束颜色
