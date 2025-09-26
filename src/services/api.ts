@@ -8,6 +8,7 @@ import {
   DeviceList,
   queryDeviceInfo,
   GetDeviceInfo,
+  QueryOrderStatus,
 } from '../types/apiTypes';
 // 用户相关接口
 export interface User {
@@ -181,6 +182,19 @@ class ApiService {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
+      },
+    );
+    return response.data;
+  }
+  /**
+   * 查询订单状态
+   * -URL: /orders/app/consume/device/last/consume
+   */
+  async queryOrderStatus(devNo: string): Promise<QueryOrderStatus> {
+    const response = await httpClient.get<QueryOrderStatus>(
+      '/orders/app/consume/device/last/consume',
+      {
+        params: { devNo },
       },
     );
     return response.data;

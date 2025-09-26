@@ -331,7 +331,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
       await getDevCode(result);
       let res2 = await apiService.queryDeviceInfo(result);
       console.log('设备信息：', res2);
-      navigate('Xiyu');
+      navigate('Xiyu', { device: res2 });
     } catch (error) {
       ToastAndroid.show('获取项目ID失败', ToastAndroid.SHORT);
     }
