@@ -6,6 +6,7 @@ import {
   ToastAndroid,
   StatusBar,
   Image,
+  Pressable,
 } from 'react-native';
 import apiService from '../../services/api';
 import RadioGroup from '../../components/RadioGroup';
@@ -13,12 +14,53 @@ import Radio from '../../components/Radio';
 import { goBack } from '../../services/navigationService';
 import LinearGradient from 'react-native-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { getDeviceinfo } from '../../utils/Common';
 const Xiyu: React.FC = () => {
   const insets = useSafeAreaInsets(); // 获取安全区域边距
   useEffect(() => {
-    console.log('======>',insets);
-    
+    console.log('======>', insets);
+    queryDeviceInfo();
   }, []);
+
+  // 开始4g消费
+  const start4GConsumption = () => {
+    console.log('检查设备状态');
+    let intervalId: any = null;
+    let attempts = 0;
+    // 检查设备是否在线
+    const checkDeviceStatus = async () => {
+      try {
+        let devState = await getDeviceinfo('864814071027923');
+        console.log('设备状态', devState);
+        if (devState == 2) {
+          clearInterval(intervalId);
+          return;
+        }
+        // 如果状态是 1 或者尝试次数超过 10 次，停止定时器
+        if (devState) {
+          clearInterval(intervalId);
+        } else if (attempts >= 3) {
+          console.log('设备不在线，开始蓝牙消费');
+          clearInterval(intervalId);
+        }
+        attempts++;
+      } catch (error) {
+        clearInterval(intervalId);
+      }
+    };
+    // 每秒调用 checkDeviceStatus
+    intervalId = setInterval(checkDeviceStatus, 2000);
+  };
+  // 查看设备状态
+  const queryDeviceInfo = async () => {
+    try {
+      let devState = await apiService.queryDeviceInfo('864814071027923');
+      console.log('设备状态', devState);
+      
+    } catch (error) {
+      ToastAndroid.show(error.msg, ToastAndroid.SHORT);
+    }
+  }
   return (
     <View style={styles.container}>
       <StatusBar
@@ -80,15 +122,17 @@ const Xiyu: React.FC = () => {
           <Text>123456789</Text>
         </View>
         <View style={[styles.footer, { paddingBottom: insets.bottom }]}>
-          <LinearGradient
-            colors={['#FF510A', '#FE8F0A']} // 对应的起始和结束颜色
-            locations={[0.03, 1.0]} // 对应 3% 和 100%
-            start={{ x: 0, y: 0.5 }} // 渐变开始点：左上角
-            end={{ x: 1, y: 0.5 }} // 渐变结束点：左下角 (从上到下)
-            style={styles.consumeStart}
-          >
-            <Text style={styles.consumeText}>开始消费</Text>
-          </LinearGradient>
+          <Pressable onPress={start4GConsumption}>
+            <LinearGradient
+              colors={['#FF510A', '#FE8F0A']} // 对应的起始和结束颜色
+              locations={[0.03, 1.0]} // 对应 3% 和 100%
+              start={{ x: 0, y: 0.5 }} // 渐变开始点：左上角
+              end={{ x: 1, y: 0.5 }} // 渐变结束点：左下角 (从上到下)
+              style={styles.consumeStart}
+            >
+              <Text style={styles.consumeText}>开始消费</Text>
+            </LinearGradient>
+          </Pressable>
         </View>
       </View>
     </View>

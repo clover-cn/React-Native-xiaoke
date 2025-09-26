@@ -1,7 +1,10 @@
+import apiService from '../services/api';
+
 // 通用本地存储封装（基于 react-native-mmkv）
 // 说明：提供同步 API，供各处统一调用：storage.set/get/delete
 import { MMKV } from 'react-native-mmkv';
 import { ComputeType, ComputeResult } from '../types/commonType';
+import { ToastAndroid } from 'react-native';
 // 单例存储实例（如需分命名空间，可新建不同 id 的 MMKV 实例）
 const mmkv = new MMKV();
 
@@ -220,4 +223,46 @@ export function computeNumber(
       );
     },
   };
+}
+
+/**
+ * 查询设备信息
+ */
+export function getDeviceinfo(devNo: string) {
+  return new Promise((resolve, reject) => {
+    apiService
+      .getDeviceInfo(devNo)
+      .then(res => {
+        console.log('?????????',res);
+        
+        if (res.onlineState === '0' && res.state === '0') {
+          console.log('设备在线，状态正常');
+          resolve(true);
+        } else if (res.onlineState === '0' && res.state === '1') {
+          console.log('设备在线，免费模式');
+          resolve(2);
+        } else if (res.onlineState === '0' && res.state === '2') {
+          console.log('设备在线，维护模式');
+          ToastAndroid.show('设备维护中！', ToastAndroid.SHORT);
+          resolve(2);
+        } else if (res.onlineState === '1' && res.state === '0') {
+          console.log('设备离线，状态正常');
+          resolve(false);
+        } else if (res.onlineState === '1' && res.state === '1') {
+          console.log('设备离线，免费模式');
+          resolve(2);
+        } else if (res.onlineState === '1' && res.state === '2') {
+          console.log('设备离线，维护模式');
+          ToastAndroid.show('设备维护中！', ToastAndroid.SHORT);
+          resolve(2);
+        } else {
+          // reject(res.data)
+          reject(new Error('设设备状态异常，请联系管理员！'));
+          ToastAndroid.show('设备状态异常，请联系管理员！', ToastAndroid.SHORT);
+        }
+      })
+      .catch(err => {
+        reject(err);
+      });
+  });
 }

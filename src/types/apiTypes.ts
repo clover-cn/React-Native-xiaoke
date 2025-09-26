@@ -103,3 +103,51 @@ export interface queryDeviceInfo {
   roomName: string
   secondType: any
 }
+
+export interface GetDeviceInfo {
+    addLiquidNo: any;
+    bindingTime: string;
+    bookingState: string;
+    buildingId: string;
+    buildingName: string;
+    concentratorName: any;
+    concentratorNo: any;
+    createTime: string;
+    dealSignature: any;
+    devBigTypeCode: string;
+    devGroupId: string;
+    devGroupName: string;
+    devMinTypeCode: any;
+    devNo: string;
+    deviceAddLiquid: any;
+    firmwareVersion: string;
+    firmwareVersionFlag: string;
+    floorId: string;
+    floorName: string;
+    gender: string;
+    id: string;
+    independentParam: any;
+    lastActiveTime: string;
+    lastOfflineTime: string;
+    lastOnlinePersistentTime: string;
+    lastOnlineTime: string;
+    lastProjectId: string;
+    mac: string;
+    name: any;
+    netType: string;
+    onlineState: string;
+    onlineType: any;
+    projectId: string;
+    remark: string;
+    repairState: string;
+    roomId: string;
+    roomName: string;
+    state: string;
+    surplusTime: any;
+    tclNo: any;
+    testState: string;
+    updateTime: string;
+    useState: string;
+    version: string;
+    warnState: string;
+}

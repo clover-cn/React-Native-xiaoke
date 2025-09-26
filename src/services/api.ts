@@ -7,6 +7,7 @@ import {
   FeatureToggle,
   DeviceList,
   queryDeviceInfo,
+  GetDeviceInfo,
 } from '../types/apiTypes';
 // 用户相关接口
 export interface User {
@@ -158,13 +159,29 @@ class ApiService {
     return response.data;
   }
   /**
-   * 查看设备信息
+   * 查看设备状态
    * -URL: /projects/appDevice/queryDeviceInfo
    */
   async queryDeviceInfo(deviceNo: string): Promise<queryDeviceInfo> {
     const response = await httpClient.post<queryDeviceInfo>(
       '/projects/appDevice/queryDeviceInfo',
       { deviceNo },
+    );
+    return response.data;
+  }
+  /**
+   * 查询设备信息
+   * -URL: /projects/deviceInfo/getDeviceInfo
+   */
+  async getDeviceInfo(devNo: string): Promise<GetDeviceInfo> {
+    const response = await httpClient.post<GetDeviceInfo>(
+      '/projects/deviceInfo/getDeviceInfo',
+      { devNo },
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      },
     );
     return response.data;
   }
