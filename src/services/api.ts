@@ -9,6 +9,7 @@ import {
   queryDeviceInfo,
   GetDeviceInfo,
   QueryOrderStatus,
+  PostConsumeStart,
 } from '../types/apiTypes';
 // 用户相关接口
 export interface User {
@@ -187,14 +188,57 @@ class ApiService {
     return response.data;
   }
   /**
-   * 查询订单状态
+   * 查询设备是否在运行中
    * -URL: /orders/app/consume/device/last/consume
    */
-  async queryOrderStatus(devNo: string): Promise<QueryOrderStatus> {
+  async getDeviceStatus(devNo: string): Promise<QueryOrderStatus> {
     const response = await httpClient.get<QueryOrderStatus>(
       '/orders/app/consume/device/last/consume',
       {
         params: { devNo },
+      },
+    );
+    return response.data;
+  }
+  /**
+   * 开始消费
+   * -URL: /orders/app/consume/start
+   */
+  async postConsumeStart(resData: any): Promise<PostConsumeStart> {
+    const response = await httpClient.post<PostConsumeStart>(
+      '/orders/app/consume/start',
+      resData,
+    );
+    return response.data;
+  }
+  /**
+   * 查询订单状态
+   * -URL: /orders/app/consume/order/detail
+   */
+  async postOrderDetail(consumeOrderId: string): Promise<QueryOrderStatus> {
+    const response = await httpClient.post<QueryOrderStatus>(
+      '/orders/app/consume/order/detail',
+      { consumeOrderId },
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      },
+    );
+    return response.data;
+  }
+  /**
+   * 结束4G消费
+   * -URL: /projects/appConsumer/endAppConsumer
+   */
+  async endAppConsumer(reqData: object): Promise<QueryOrderStatus> {
+    const response = await httpClient.post<QueryOrderStatus>(
+      '/projects/appConsumer/endAppConsumer',
+      reqData,
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
       },
     );
     return response.data;

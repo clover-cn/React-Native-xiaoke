@@ -9,16 +9,41 @@ import { navigationRef } from '../services/navigationService';
 // token 键名（局部常量，按需跨模块可提升至 Common.ts）
 const TOKEN_KEY = 'APP_AUTH_TOKEN';
 
+// 清理字符串的辅助函数
+const cleanString = (str: string): string => {
+  return str
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/[\r\n\t]/g, '');
+};
+
 class BusinessError<T = unknown> extends Error {
   public code: number;
-
   public payload: T;
+  public msg?: string; // 添加 msg 属性以兼容服务端返回的格式
 
   constructor(code: number, message: string, payload: T) {
     super(message);
     this.name = 'BusinessError';
     this.code = code;
     this.payload = payload;
+
+    // 如果 payload 是对象且包含 msg 属性，将其复制到错误对象上并清理
+    if (payload && typeof payload === 'object' && 'msg' in payload) {
+      const rawMsg = (payload as any).msg;
+      this.msg = typeof rawMsg === 'string' ? cleanString(rawMsg) : rawMsg;
+    }
+    // 如果 payload 是对象且包含 message 属性但没有 msg，使用 message 并清理
+    if (
+      payload &&
+      typeof payload === 'object' &&
+      'message' in payload &&
+      !this.msg
+    ) {
+      const rawMessage = (payload as any).message;
+      this.msg =
+        typeof rawMessage === 'string' ? cleanString(rawMessage) : rawMessage;
+    }
     Object.setPrototypeOf(this, BusinessError.prototype);
   }
 }
@@ -84,6 +109,7 @@ const commonResponseInterceptor = async (
     status: response.status,
     statusText: response.statusText,
     headers: Object.fromEntries(response.headers.entries()),
+    // data: await response.clone().text(),
   });
 
   // 如果不是成功的HTTP状态码，直接返回让errorInterceptor处理
@@ -100,7 +126,9 @@ const commonResponseInterceptor = async (
 
     // 只处理成功HTTP响应中的业务错误码
     if (data.code && data.code != 200 && data.code != 0) {
-      const businessMessage = data.message || data.msg || 'Unknown error';
+      const businessMessage = cleanString(
+        data.message || data.msg || 'Unknown error',
+      );
       console.warn('⚠️ Business Error:', businessMessage);
 
       // 根据错误码进行不同处理
@@ -117,18 +145,15 @@ const commonResponseInterceptor = async (
               });
             }
           }, 100);
-          break;
+          throw new BusinessError(data.code, businessMessage, data);
         case 403:
           Alert.alert('提示', '没有权限访问该资源');
           navigationRef.goBack();
-          break;
+          throw new BusinessError(data.code, businessMessage, data);
         default:
-          if (businessMessage) {
-            Alert.alert('提示', businessMessage);
-          }
+          // ToastAndroid.show(businessMessage, ToastAndroid.SHORT);
+          throw new BusinessError(data.code, businessMessage, data);
       }
-
-      throw new BusinessError(data.code, businessMessage, data);
     }
   } catch (error) {
     // 如果已经是BusinessError，直接抛出

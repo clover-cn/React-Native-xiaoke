@@ -217,4 +217,26 @@ export interface QueryOrderStatus {
   userGroupId: string;
   userId: string;
   userName: string;
+  consumeOrderId?: string;
+  isImmediately?: boolean;
+}
+
+export interface PostConsumeStart {
+  alipayTradeNo: any
+  balanceNeedFee: string
+  blueRandomNumber: any
+  canCouponUseFee: string
+  consumeOrderId: string
+  couponNeedFee: string
+  curBalanceFee: string
+  encodeOrder: string
+  immediatelyPayFee: string
+  isImmediately: boolean
+  needTotalFee: string
+  nonceStr: any
+  paySign: any
+  prepayId: any
+  signType: any
+  timestamp: any
+  waitPayConsumeOrderIds: any
 }

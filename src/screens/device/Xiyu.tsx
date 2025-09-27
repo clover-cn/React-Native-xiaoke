@@ -25,11 +25,21 @@ const Xiyu: React.FC = () => {
   const [isState, setIsState] = useState(false); // 设备是否在使用中
   const [deviceInfo, setDeviceInfo] = useState(devInfo.device || {});
   const labelMap: any = { '0': '空闲', '1': '使用中', '2': '离线' };
+
   useEffect(() => {
-    console.log('======>', insets, deviceInfo);
-    // queryDeviceInfo();
+    console.log('获取安全区', insets);
+    console.log('传入的设备信息：', deviceInfo);
     queryOrderStatus();
   }, []);
+  
+  // 设备启动或者关闭
+  const toggleDevice = () => {
+    if (isState) {
+      end4gConsumption();
+    } else {
+      start4GConsumption();
+    }
+  };
 
   // 开始4g消费
   const start4GConsumption = () => {
@@ -39,7 +49,7 @@ const Xiyu: React.FC = () => {
     // 检查设备是否在线
     const checkDeviceStatus = async () => {
       try {
-        let devState = await getDeviceinfo('864814071027923');
+        let devState = await getDeviceinfo(deviceInfo.deviceNo);
         console.log('设备状态', devState);
         if (devState == 2) {
           clearInterval(intervalId);
@@ -47,7 +57,9 @@ const Xiyu: React.FC = () => {
         }
         // 如果状态是 1 或者尝试次数超过 10 次，停止定时器
         if (devState) {
+          console.log('设备在线，开始4G消费');
           clearInterval(intervalId);
+          postConsumeStart();
         } else if (attempts >= 3) {
           console.log('设备不在线，开始蓝牙消费');
           clearInterval(intervalId);
@@ -60,11 +72,13 @@ const Xiyu: React.FC = () => {
     // 每秒调用 checkDeviceStatus
     intervalId = setInterval(checkDeviceStatus, 2000);
   };
+
   // 查看设备状态
   const queryDeviceInfo = async () => {
     try {
-      let devState = await apiService.queryDeviceInfo('864814071027923');
+      let devState = await apiService.queryDeviceInfo(deviceInfo.deviceNo);
       console.log('设备状态', devState);
+      setDeviceInfo(devState);
     } catch (error: any) {
       // 使用类型断言或者检查错误对象的属性
       const message = error?.msg || error?.message || '请求失败';
@@ -73,9 +87,10 @@ const Xiyu: React.FC = () => {
   };
 
   const consumeOrderId = useRef<string>('');
-  // 查询订单状态(根据订单状态决定设备是否在运行中)
+
+  // 查询设备是否在运行中
   const queryOrderStatus = async () => {
-    let res = await apiService.queryOrderStatus(deviceInfo.deviceNo);
+    let res = await apiService.getDeviceStatus(deviceInfo.deviceNo);
     console.log('订单状态', res);
     if (res) {
       consumeOrderId.current = res.id;
@@ -89,7 +104,6 @@ const Xiyu: React.FC = () => {
       return;
     }
     if (res && parseInt(res.state) > 1) {
-      let currstate = storage.get('xiyuBluetooth', 'boolean');
       setIsState(false);
       // 判断蓝牙状态
       // if (that.data.xiyuBluetooth || currstate) {
@@ -103,6 +117,171 @@ const Xiyu: React.FC = () => {
       // }
     }
   };
+
+  const Deviceinfo = useRef<object>({});
+  // 创建订单
+  const postConsumeStart = async () => {
+    try {
+      let reqData = {
+        consumeEncodeData: '', // 设备给APP的加密数据, 仅当netType为蓝牙时候需要传递
+        devNo: deviceInfo.deviceNo, // 	设备编号
+        gear: '', // 档位 - 有档位设备才传递,
+        liquid: '', // 加液标识 - tcl相关才有, '01':只加洗衣液/'02':加洗衣液和消毒液
+        netType: '', // 设备网络类型, 0:4G/1:蓝牙 不传默认4g
+        rateSettingId: '', // 费率设置id - 有就回传回来
+        consumeFrom: '1', // app消费的来源-0:(默认)扫屏幕码进入消费,1:从打印的静态码进入消费, 2:常用设备进入消费进入消费
+      };
+      let res = await apiService.postConsumeStart(reqData);
+      deviceStatus(res.consumeOrderId)
+        .then(devState => {
+          const devStateStr = devState as string;
+          if (parseInt(devStateStr) >= 1 && devStateStr !== '4') {
+            console.log('设备正常启动');
+            setIsState(true);
+            Deviceinfo.current = res;
+            queryDeviceInfo();
+            storage.set('xiyuOrder', res.consumeOrderId);
+            consumeOrderId.current = res.consumeOrderId;
+            ToastAndroid.show('启动成功', ToastAndroid.SHORT);
+            // that.setData({
+            //   Deviceinfo: res.data.data,
+            //   isState: true,
+            //   xiyuBluetooth: false,
+            // });
+            // that.setStorage();
+            // wx.setStorageSync('xiyuBluetooth', false);
+            // wx.setStorageSync(that.data.param.deviceNo, {
+            //   isOffline: false,
+            //   deviceNo: that.data.param.deviceNo,
+            // });
+            // wx.setStorageSync('xiyuOrder', res.data.data.consumeOrderId);
+            // wx.showToast({
+            //   title: '启动成功',
+            //   icon: 'success',
+          } else if (devStateStr === '4') {
+            ToastAndroid.show('订单已取消，请重试。', ToastAndroid.SHORT);
+          } else {
+            console.log('设备响应超时，开始启动蓝牙');
+            // common
+            //   .InitialBluetooth(
+            //     that.data.DeviceId,
+            //     that.data.param.deviceNo,
+            //     res.data.data.consumeOrderId,
+            //   )
+            //   .then(hexString => {
+            //     that.twoVaryBluetooth(res.data.data.consumeOrderId, hexString);
+            //   })
+            //   .catch(err => {
+            //     common.CutoffBluetooth();
+            //   });
+          }
+        })
+        .catch(err => {
+          console.log('设备启动失败', err);
+          ToastAndroid.show('设备启动失败', ToastAndroid.SHORT);
+        });
+    } catch (error: any) {
+      ToastAndroid.show(error.msg, ToastAndroid.SHORT);
+    }
+  };
+
+  // 查询订单状态
+  const deviceStatus = (consumeOrderId: string) => {
+    return new Promise((resolve, reject) => {
+      let intervalId: any = null;
+      let attempts = 0;
+      const checkDeviceStatus = async () => {
+        try {
+          let { state: devState } = await apiService.postOrderDetail(
+            consumeOrderId,
+          );
+          console.log('轮询设备订单状态', devState);
+          if (devState === '0' && attempts >= 7) {
+            clearInterval(intervalId);
+            resolve(devState);
+          } else if (devState === '1' && (!isState || attempts >= 7)) {
+            clearInterval(intervalId);
+            resolve(devState);
+          } else if (parseInt(devState) > 1) {
+            clearInterval(intervalId);
+            resolve(devState);
+          }
+          attempts++;
+        } catch (error) {
+          clearInterval(intervalId);
+          reject();
+        }
+      };
+      intervalId = setInterval(checkDeviceStatus, 2000);
+    });
+  };
+
+  // 结束4G消费
+  const end4gConsumption = () => {
+    let xiyuOrder = storage.get('xiyuOrder') as string;
+    let intervalId: any = null;
+    let attempts = 0;
+    // 检查设备是否在线
+    const checkDeviceStatus = async () => {
+      try {
+        let devState = await getDeviceinfo(deviceInfo.deviceNo);
+        console.log('设备状态', devState);
+        if (devState == 2) {
+          clearInterval(intervalId);
+          return;
+        }
+        // 如果状态是 1 或者尝试次数超过 10 次，停止定时器
+        if (devState) {
+          console.log('设备在线，开始4G停止');
+          clearInterval(intervalId);
+          endAppConsumer(xiyuOrder);
+        } else if (attempts >= 3) {
+          console.log('设备不在线，开始蓝牙消费');
+          clearInterval(intervalId);
+        }
+        attempts++;
+      } catch (error) {
+        clearInterval(intervalId);
+      }
+    };
+    intervalId = setInterval(checkDeviceStatus, 2000);
+  };
+
+  // 结束订单
+  const endAppConsumer = async (xiyuOrder: string) => {
+    try {
+      let reqData = {
+        devGroupId: deviceInfo.deviceGroupId,
+        devNo: deviceInfo.deviceNo,
+        orderNumbers: consumeOrderId.current || xiyuOrder,
+      };
+      let res = await apiService.endAppConsumer(reqData);
+      console.log('结束订单', res);
+
+      deviceStatus(consumeOrderId.current || xiyuOrder)
+        .then(devState => {
+          const devStateStr = devState as string;
+          if (devStateStr === '1') {
+            console.log('关闭设备响应超时，启动蓝牙关闭');
+          } else {
+            // 判断是否开启及时支付
+            if (res.isImmediately) {
+              console.log('启动及时支付');
+            }
+            setIsState(false);
+            queryDeviceInfo();
+            ToastAndroid.show('关闭成功', ToastAndroid.SHORT);
+          }
+        })
+        .catch(err => {
+          console.log('设备启动失败', err);
+          ToastAndroid.show('设备启动失败', ToastAndroid.SHORT);
+        });
+    } catch (error: any) {
+      ToastAndroid.show(error.msg, ToastAndroid.SHORT);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar
@@ -165,7 +344,7 @@ const Xiyu: React.FC = () => {
           <Text>123456789</Text>
         </View>
         <View style={[styles.footer, { paddingBottom: insets.bottom + 10 }]}>
-          <Pressable onPress={start4GConsumption} style={styles.shadowWrap}>
+          <Pressable onPress={toggleDevice} style={styles.shadowWrap}>
             <LinearGradient
               colors={isState ? ['#FD3563', '#FE3547'] : ['#FF510A', '#FE8F0A']} // 对应的起始和结束颜色
               locations={[0.03, 1.0]} // 对应 3% 和 100%
