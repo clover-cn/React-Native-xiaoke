@@ -17,6 +17,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getDeviceinfo, storage } from '../../utils/Common';
 import { useRoute } from '@react-navigation/native';
+import { showLoading, hideLoading } from '../../services/loadingService';
 const Xiyu: React.FC = () => {
   const insets = useSafeAreaInsets(); // 获取安全区域边距
   // 接收参数
@@ -44,6 +45,11 @@ const Xiyu: React.FC = () => {
   // 开始4g消费
   const start4GConsumption = () => {
     console.log('检查设备状态');
+    showLoading({
+      title: '启动中...',
+      mask: true
+    });
+    
     let intervalId: any = null;
     let attempts = 0;
     // 检查设备是否在线
@@ -53,6 +59,7 @@ const Xiyu: React.FC = () => {
         console.log('设备状态', devState);
         if (devState == 2) {
           clearInterval(intervalId);
+          hideLoading(); // 隐藏Loading
           return;
         }
         // 如果状态是 1 或者尝试次数超过 10 次，停止定时器
@@ -63,10 +70,12 @@ const Xiyu: React.FC = () => {
         } else if (attempts >= 3) {
           console.log('设备不在线，开始蓝牙消费');
           clearInterval(intervalId);
+          hideLoading(); // 隐藏Loading
         }
         attempts++;
       } catch (error) {
         clearInterval(intervalId);
+        hideLoading(); // 出错时隐藏Loading
       }
     };
     // 每秒调用 checkDeviceStatus
@@ -142,6 +151,7 @@ const Xiyu: React.FC = () => {
             queryDeviceInfo();
             storage.set('xiyuOrder', res.consumeOrderId);
             consumeOrderId.current = res.consumeOrderId;
+            hideLoading(); // 启动成功后隐藏Loading
             ToastAndroid.show('启动成功', ToastAndroid.SHORT);
             // that.setData({
             //   Deviceinfo: res.data.data,
@@ -159,8 +169,10 @@ const Xiyu: React.FC = () => {
             //   title: '启动成功',
             //   icon: 'success',
           } else if (devStateStr === '4') {
+            hideLoading(); // 订单取消时隐藏Loading
             ToastAndroid.show('订单已取消，请重试。', ToastAndroid.SHORT);
           } else {
+            hideLoading(); // 设备响应超时时隐藏Loading
             console.log('设备响应超时，开始启动蓝牙');
             // common
             //   .InitialBluetooth(
@@ -177,10 +189,12 @@ const Xiyu: React.FC = () => {
           }
         })
         .catch(err => {
+          hideLoading(); // 启动失败时隐藏Loading
           console.log('设备启动失败', err);
           ToastAndroid.show('设备启动失败', ToastAndroid.SHORT);
         });
     } catch (error: any) {
+      hideLoading(); // 异常时隐藏Loading
       ToastAndroid.show(error.msg, ToastAndroid.SHORT);
     }
   };
@@ -218,6 +232,12 @@ const Xiyu: React.FC = () => {
 
   // 结束4G消费
   const end4gConsumption = () => {
+    
+    showLoading({
+      title: '正在关闭...',
+      mask: true
+    });
+    
     let xiyuOrder = storage.get('xiyuOrder') as string;
     let intervalId: any = null;
     let attempts = 0;
@@ -228,6 +248,7 @@ const Xiyu: React.FC = () => {
         console.log('设备状态', devState);
         if (devState == 2) {
           clearInterval(intervalId);
+          hideLoading(); // 设备离线时隐藏Loading
           return;
         }
         // 如果状态是 1 或者尝试次数超过 10 次，停止定时器
@@ -238,10 +259,12 @@ const Xiyu: React.FC = () => {
         } else if (attempts >= 3) {
           console.log('设备不在线，开始蓝牙消费');
           clearInterval(intervalId);
+          hideLoading(); // 设备不在线时隐藏Loading
         }
         attempts++;
       } catch (error) {
         clearInterval(intervalId);
+        hideLoading(); // 出错时隐藏Loading
       }
     };
     intervalId = setInterval(checkDeviceStatus, 2000);
@@ -270,14 +293,17 @@ const Xiyu: React.FC = () => {
             }
             setIsState(false);
             queryDeviceInfo();
+            hideLoading(); // 关闭成功后隐藏Loading
             ToastAndroid.show('关闭成功', ToastAndroid.SHORT);
           }
         })
         .catch(err => {
+          hideLoading(); // 关闭失败时隐藏Loading
           console.log('设备启动失败', err);
           ToastAndroid.show('设备启动失败', ToastAndroid.SHORT);
         });
     } catch (error: any) {
+      hideLoading(); // 异常时隐藏Loading
       ToastAndroid.show(error.msg, ToastAndroid.SHORT);
     }
   };

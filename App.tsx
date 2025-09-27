@@ -6,6 +6,7 @@ import { AppNavigator, useTheme, initHttp, configureHttp } from './src';
 import { ScanProvider, useScan } from './src/contexts/ScanContext';
 import { shortcutService, SHORTCUT_ACTIONS } from './src/services/shortcutService';
 import { navigationRef } from './src/services/navigationService';
+import GlobalLoading from './src/components/GlobalLoading';
 
 // 应用主组件内容
 const AppContent: React.FC = () => {
@@ -110,6 +111,8 @@ function App() {
         {/* 不用 SafeAreaView 包住整个 App，避免状态栏区域被全局白色填充；
             首页会自己处理沉浸式背景和安全区。其他页面若需要可局部使用 SafeAreaView。 */}
         <AppContent />
+        {/* 全局Loading组件 */}
+        <GlobalLoading />
       </ScanProvider>
     </SafeAreaProvider>
   );
