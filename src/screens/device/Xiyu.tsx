@@ -89,17 +89,6 @@ const Xiyu: React.FC = () => {
   // 开始4g消费
   const start4GConsumption = async () => {
     console.log('检查设备状态');
-
-    try {
-      await InitialBluetooth(deviceInfo.mac);
-      console.log('蓝牙初始化成功');
-    } catch (error: any) {
-      console.error('蓝牙初始化失败:', error);
-      ToastAndroid.show(error.message, ToastAndroid.LONG);
-      return;
-    }
-
-    return;
     showLoading({
       title: '启动中...',
       mask: true,
@@ -125,7 +114,7 @@ const Xiyu: React.FC = () => {
         } else if (attempts >= 3) {
           console.log('设备不在线，开始蓝牙消费');
           clearInterval(intervalId);
-          hideLoading(); // 隐藏Loading
+          bluetoothPayment();
         }
         attempts++;
       } catch (error) {
@@ -373,6 +362,39 @@ const Xiyu: React.FC = () => {
     }, []),
   );
 
+  // 蓝牙消费
+  const bluetoothPayment = async () => {
+    try {
+      await InitialBluetooth(deviceInfo.mac);
+      hideLoading(); // 隐藏Loading
+      console.log('蓝牙初始化成功');
+    } catch (error: any) {
+      console.error('蓝牙初始化失败:', error);
+      ToastAndroid.show(error.message, ToastAndroid.LONG);
+      hideLoading(); // 隐藏Loading
+      return;
+    }
+  };
+
+  // 地址处理
+  const processAddress = () => {
+    return (
+      (deviceInfo.buildingName ?? '-') +
+      (deviceInfo.floorName ?? '-') +
+      (deviceInfo.roomName ?? '-')
+    );
+  };
+
+  // 服务时段处理
+  const processServiceHours = () => {
+    if (deviceInfo.enableWordTimeFrame === '1') {
+      const content = deviceInfo.slice(1, -1);
+      return content;
+    } else {
+      return '00:00-23:59';
+    }
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar
@@ -395,7 +417,7 @@ const Xiyu: React.FC = () => {
             />
             <Text>服务时段</Text>
           </View>
-          <Text>00:00~23:59</Text>
+          <Text>{processServiceHours()}</Text>
         </View>
         <View style={styles.Line}></View>
         <View style={styles.contentList}>
@@ -408,7 +430,7 @@ const Xiyu: React.FC = () => {
             <Text>设备状态</Text>
           </View>
           {/* <Text>{deviceInfo.deviceStatus === '0' ? '空闲' : '使用中'}</Text> */}
-          <Text>{labelMap[deviceInfo?.deviceStatus] ?? '未知'}</Text>
+          <Text>{labelMap[deviceInfo?.deviceStatus] ?? '空闲'}</Text>
         </View>
         <View style={styles.Line}></View>
         <View style={styles.contentList}>
@@ -420,7 +442,7 @@ const Xiyu: React.FC = () => {
             />
             <Text>设备编号</Text>
           </View>
-          <Text>123456789</Text>
+          <Text>{deviceInfo.deviceNo}</Text>
         </View>
         <View style={styles.Line}></View>
         <View style={styles.contentList}>
@@ -432,7 +454,7 @@ const Xiyu: React.FC = () => {
             />
             <Text>设备地址</Text>
           </View>
-          <Text>123456789</Text>
+          <Text>{processAddress()}</Text>
         </View>
         <View style={[styles.footer, { paddingBottom: insets.bottom + 10 }]}>
           <Pressable onPress={toggleDevice} style={styles.shadowWrap}>
