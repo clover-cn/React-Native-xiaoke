@@ -152,7 +152,7 @@ class BluetoothService {
     return true;
   }
 
-  // 扫描设备
+  // 扫描设备 - 支持提前停止扫描
   async scanDevices(
     onDeviceFound: (device: Device) => void,
     timeout: number = 10000,
@@ -160,10 +160,24 @@ class BluetoothService {
     return new Promise((resolve, reject) => {
       let isScanning = true;
       let hasFoundDevices = false;
+      let timeoutId: number | null = null;
       this.isCancelledRef = false;
+
+      const cleanup = () => {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
+        }
+        if (isScanning) {
+          isScanning = false;
+          this.manager.stopDeviceScan();
+        }
+      };
+
       this.manager.startDeviceScan(null, null, (error, device) => {
         if (error) {
           console.error('扫描错误:', error);
+          cleanup();
 
           // 只有在权限相关错误时才提示用户
           if (error.message && error.message.includes('permission')) {
@@ -181,26 +195,37 @@ class BluetoothService {
         if (device && device.name && isScanning) {
           hasFoundDevices = true;
           onDeviceFound(device);
+          try {
+            // 找到目标设备后，停止扫描
+            if (this.isCancelledRef) {
+              cleanup();
+              resolve();
+            }
+          } catch (callbackError) {
+            console.error('设备处理回调出错:', callbackError);
+            cleanup();
+            reject(callbackError);
+          }
         }
       });
 
       // 设置扫描超时
-      setTimeout(() => {
+      timeoutId = setTimeout(() => {
         if (this.isCancelledRef) {
           console.log('扫描被取消...');
-          // this.destroy();
+          cleanup();
           return;
         }
-        isScanning = false;
-        this.manager.stopDeviceScan();
-        console.log(`扫描完成，${hasFoundDevices ? '发现设备' : '未发现设备'}`);
-        resolve();
+        cleanup();
+        console.log('扫描蓝牙超时，已取消扫描');
+        reject(new Error('未找到蓝牙设备'));
       }, timeout);
     });
   }
 
   // 停止扫描
   stopScan(): void {
+    this.isCancelledRef = true;
     this.manager.stopDeviceScan(); // 停止扫描
   }
 

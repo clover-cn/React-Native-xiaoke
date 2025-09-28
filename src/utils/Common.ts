@@ -280,9 +280,25 @@ export function destroy() {
 /**
  * 初始化蓝牙
  */
-export function InitialBluetooth() {
+export function InitialBluetooth(mac: string) {
   return new Promise(async (resolve, reject) => {
     try {
+      let bluetoothId = '';
+      if (mac) {
+        bluetoothId =
+          mac.slice(0, 2) +
+          ':' +
+          mac.slice(2, 4) +
+          ':' +
+          mac.slice(4, 6) +
+          ':' +
+          mac.slice(6, 8) +
+          ':' +
+          mac.slice(8, 10) +
+          ':' +
+          mac.slice(10, 12);
+        console.log('转换后的蓝牙id', bluetoothId);
+      }
       console.log('初始化蓝牙');
 
       // 确保有可用的蓝牙服务实例
@@ -296,6 +312,10 @@ export function InitialBluetooth() {
       if (res) {
         await bluetoothService.scanDevices(e => {
           console.log('扫描到设备:', e);
+          if (mac && e.id === bluetoothId) {
+            bluetoothService.stopScan();
+            console.log('找到目标设备，停止扫描', e.id);
+          }
         });
         resolve(res);
       } else {

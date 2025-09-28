@@ -91,11 +91,11 @@ const Xiyu: React.FC = () => {
     console.log('检查设备状态');
 
     try {
-      await InitialBluetooth();
+      await InitialBluetooth(deviceInfo.mac);
       console.log('蓝牙初始化成功');
-    } catch (error) {
+    } catch (error: any) {
       console.error('蓝牙初始化失败:', error);
-      ToastAndroid.show('蓝牙初始化失败，请检查权限设置', ToastAndroid.LONG);
+      ToastAndroid.show(error.message, ToastAndroid.LONG);
       return;
     }
 
