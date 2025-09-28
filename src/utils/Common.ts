@@ -274,7 +274,7 @@ export function getDeviceinfo(devNo: string) {
  * 断开蓝牙连接
  */
 export function destroy() {
-  bluetoothService.destroy();
+  bluetoothService.destroy(true);
 }
 
 /**

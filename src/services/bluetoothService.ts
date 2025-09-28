@@ -1,10 +1,9 @@
 import { BleManager, Device, Characteristic } from 'react-native-ble-plx';
 import { Alert, PermissionsAndroid, Platform } from 'react-native';
-
 class BluetoothService {
   private manager: BleManager;
   private connectedDevice: Device | null = null;
-
+  private isCancelledRef = false; // 用于标记是否已取消蓝牙操作
   constructor() {
     this.manager = new BleManager();
   }
@@ -161,7 +160,7 @@ class BluetoothService {
     return new Promise((resolve, reject) => {
       let isScanning = true;
       let hasFoundDevices = false;
-
+      this.isCancelledRef = false;
       this.manager.startDeviceScan(null, null, (error, device) => {
         if (error) {
           console.error('扫描错误:', error);
@@ -187,6 +186,11 @@ class BluetoothService {
 
       // 设置扫描超时
       setTimeout(() => {
+        if (this.isCancelledRef) {
+          console.log('扫描被取消...');
+          // this.destroy();
+          return;
+        }
         isScanning = false;
         this.manager.stopDeviceScan();
         console.log(`扫描完成，${hasFoundDevices ? '发现设备' : '未发现设备'}`);
@@ -330,8 +334,9 @@ class BluetoothService {
   }
 
   // 销毁蓝牙管理器
-  destroy(): void {
+  destroy(_isCancelledRef: boolean): void {
     try {
+      this.isCancelledRef = _isCancelledRef;
       // 先断开当前连接的设备
       if (this.connectedDevice) {
         this.manager
