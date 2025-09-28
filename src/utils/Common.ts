@@ -1,10 +1,13 @@
-import apiService from '../services/api';
-
 // 通用本地存储封装（基于 react-native-mmkv）
 // 说明：提供同步 API，供各处统一调用：storage.set/get/delete
 import { MMKV } from 'react-native-mmkv';
 import { ComputeType, ComputeResult } from '../types/commonType';
 import { ToastAndroid } from 'react-native';
+import apiService from '../services/api';
+import BluetoothService from '../services/bluetoothService';
+
+// 创建蓝牙服务单例实例
+const bluetoothService = new BluetoothService();
 // 单例存储实例（如需分命名空间，可新建不同 id 的 MMKV 实例）
 const mmkv = new MMKV();
 
@@ -233,8 +236,8 @@ export function getDeviceinfo(devNo: string) {
     apiService
       .getDeviceInfo(devNo)
       .then(res => {
-        console.log('?????????',res);
-        
+        console.log('?????????', res);
+
         if (res.onlineState === '0' && res.state === '0') {
           console.log('设备在线，状态正常');
           resolve(true);
@@ -266,3 +269,25 @@ export function getDeviceinfo(devNo: string) {
       });
   });
 }
+
+/**
+ * 断开蓝牙连接
+ */
+export function destroy() {
+  bluetoothService.destroy();
+}
+
+/**
+ * 初始化蓝牙
+ */
+export function InitialBluetooth() {
+  return new Promise(async (resolve, reject) => {
+    console.log('初始化蓝牙');
+    let res = await bluetoothService.initialize();
+    console.log('初始化蓝牙结果:', res);
+    await bluetoothService.scanDevices((e) => {
+      console.log('扫描到设备:', e);
+    });
+  });
+}
+

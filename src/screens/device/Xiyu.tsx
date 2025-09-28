@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   Image,
   Pressable,
   Platform,
+  Modal,
 } from 'react-native';
 import apiService from '../../services/api';
 import RadioGroup from '../../components/RadioGroup';
@@ -15,9 +16,15 @@ import Radio from '../../components/Radio';
 import { goBack } from '../../services/navigationService';
 import LinearGradient from 'react-native-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { getDeviceinfo, storage } from '../../utils/Common';
-import { useRoute } from '@react-navigation/native';
+import {
+  getDeviceinfo,
+  storage,
+  InitialBluetooth,
+  destroy,
+} from '../../utils/Common';
+import { useFocusEffect, useRoute } from '@react-navigation/native';
 import { showLoading, hideLoading } from '../../services/loadingService';
+import BluetoothService from '../../services/bluetoothService';
 const Xiyu: React.FC = () => {
   const insets = useSafeAreaInsets(); // 获取安全区域边距
   // 接收参数
@@ -32,7 +39,7 @@ const Xiyu: React.FC = () => {
     console.log('传入的设备信息：', deviceInfo);
     queryOrderStatus();
   }, []);
-  
+
   // 设备启动或者关闭
   const toggleDevice = () => {
     if (isState) {
@@ -45,11 +52,13 @@ const Xiyu: React.FC = () => {
   // 开始4g消费
   const start4GConsumption = () => {
     console.log('检查设备状态');
+    InitialBluetooth();
+    return;
     showLoading({
       title: '启动中...',
-      mask: true
+      mask: true,
     });
-    
+
     let intervalId: any = null;
     let attempts = 0;
     // 检查设备是否在线
@@ -232,12 +241,11 @@ const Xiyu: React.FC = () => {
 
   // 结束4G消费
   const end4gConsumption = () => {
-    
     showLoading({
       title: '正在关闭...',
-      mask: true
+      mask: true,
     });
-    
+
     let xiyuOrder = storage.get('xiyuOrder') as string;
     let intervalId: any = null;
     let attempts = 0;
@@ -257,7 +265,7 @@ const Xiyu: React.FC = () => {
           clearInterval(intervalId);
           endAppConsumer(xiyuOrder);
         } else if (attempts >= 3) {
-          console.log('设备不在线，开始蓝牙消费');
+          console.log('设备不在线，开始蓝牙停止');
           clearInterval(intervalId);
           hideLoading(); // 设备不在线时隐藏Loading
         }
@@ -307,6 +315,17 @@ const Xiyu: React.FC = () => {
       ToastAndroid.show(error.msg, ToastAndroid.SHORT);
     }
   };
+
+  // 监听页面焦点状态(页面聚焦/失焦)
+  useFocusEffect(
+    useCallback(() => {
+      console.log('获得焦点');
+      return () => {
+        console.log('失去焦点');
+        destroy();
+      };
+    }, []),
+  );
 
   return (
     <View style={styles.container}>
