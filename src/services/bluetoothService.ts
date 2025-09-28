@@ -229,20 +229,68 @@ class BluetoothService {
     this.manager.stopDeviceScan(); // 停止扫描
   }
 
-  // 连接到设备
-  async connectToDevice(deviceId: string): Promise<Device> {
+  // 连接到设备 - 添加超时处理
+  async connectToDevice(
+    deviceId: string,
+    timeout: number = 10000, // 连接超时时间，默认10秒
+  ): Promise<Device> {
     try {
-      const device = await this.manager.connectToDevice(deviceId);
-      await device.discoverAllServicesAndCharacteristics();
+      console.log('开始连接设备:', deviceId);
+
+      // 使用 Promise.race 实现连接超时
+      const device = await Promise.race([
+        this.manager.connectToDevice(deviceId),
+        new Promise<never>((_, reject) => {
+          setTimeout(() => {
+            reject(new Error('连接设备超时'));
+          }, timeout);
+        }),
+      ]);
+
+      // 验证设备连接状态
+      const isConnected = await device.isConnected();
+      if (!isConnected) {
+        throw new Error('设备连接验证失败');
+      }
 
       this.connectedDevice = device;
-      console.log('设备连接成功:', device.name);
+      console.log('设备连接并配置成功:', device.name || deviceId);
       return device;
     } catch (error: any) {
       console.error('连接设备失败:', error);
-      throw error;
+
+      // 尝试清理可能的连接状态
+      try {
+        await this.manager.cancelDeviceConnection(deviceId);
+      } catch (cleanupError) {
+        console.log('清理连接状态时出错:', cleanupError);
+      }
+
+      // 根据错误类型提供更友好的错误信息
+      let errorMessage = '连接设备失败';
+      if (error.message) {
+        if (
+          error.message.includes('超时') ||
+          error.message.includes('timeout')
+        ) {
+          errorMessage = '连接设备超时，请确保设备在范围内且可连接';
+        } else if (error.message.includes('permission')) {
+          errorMessage = '蓝牙权限不足，请检查应用权限设置';
+        } else if (
+          error.message.includes('not found') ||
+          error.message.includes('找不到')
+        ) {
+          errorMessage = '未找到指定的蓝牙设备';
+        } else {
+          errorMessage = `连接失败: ${error.message}`;
+        }
+      }
+
+      throw new Error(errorMessage);
     }
-  } // 断开设备连接
+  }
+
+  // 断开设备连接
   async disconnectDevice(): Promise<void> {
     if (this.connectedDevice) {
       try {
