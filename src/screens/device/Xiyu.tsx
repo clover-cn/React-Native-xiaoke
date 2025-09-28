@@ -9,6 +9,7 @@ import {
   Pressable,
   Platform,
   Modal,
+  AppState,
 } from 'react-native';
 import apiService from '../../services/api';
 import RadioGroup from '../../components/RadioGroup';
@@ -38,6 +39,42 @@ const Xiyu: React.FC = () => {
     console.log('获取安全区', insets);
     console.log('传入的设备信息：', deviceInfo);
     queryOrderStatus();
+
+    // 监听应用状态变化
+    let backgroundTimer: any = null;
+
+    const handleAppStateChange = (nextAppState: string) => {
+      console.log('应用状态变化:', nextAppState);
+      // 'active' - 应用在前台运行
+      // 'background' - 整个应用被切换到手机后台（比如按Home键、切换到其他应用）
+      // 'inactive' - 应用处于过渡状态（比如来电话时）
+
+      if (nextAppState === 'background') {
+        // 应用进入后台，延迟销毁蓝牙
+        backgroundTimer = setTimeout(() => {
+          if (AppState.currentState === 'background') {
+            console.log('应用长时间在后台，销毁蓝牙');
+            destroy();
+          }
+        }, 30000); // 30秒后如果仍在后台则销毁
+      } else if (nextAppState === 'active') {
+        // 应用重新激活，清除销毁定时器
+        if (backgroundTimer) {
+          clearTimeout(backgroundTimer);
+          backgroundTimer = null;
+          console.log('应用重新激活，取消蓝牙销毁定时器');
+        }
+      }
+    };
+
+    const subscription = AppState.addEventListener(
+      'change',
+      handleAppStateChange,
+    );
+
+    return () => {
+      subscription?.remove();
+    };
   }, []);
 
   // 设备启动或者关闭
@@ -50,9 +87,18 @@ const Xiyu: React.FC = () => {
   };
 
   // 开始4g消费
-  const start4GConsumption = () => {
+  const start4GConsumption = async () => {
     console.log('检查设备状态');
-    InitialBluetooth();
+
+    try {
+      await InitialBluetooth();
+      console.log('蓝牙初始化成功');
+    } catch (error) {
+      console.error('蓝牙初始化失败:', error);
+      ToastAndroid.show('蓝牙初始化失败，请检查权限设置', ToastAndroid.LONG);
+      return;
+    }
+
     return;
     showLoading({
       title: '启动中...',
@@ -322,7 +368,7 @@ const Xiyu: React.FC = () => {
       console.log('获得焦点');
       return () => {
         console.log('失去焦点');
-        destroy();
+        destroy(); // 主动销毁蓝牙
       };
     }, []),
   );

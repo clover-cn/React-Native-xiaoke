@@ -12,6 +12,11 @@ class BluetoothService {
   // 初始化蓝牙管理器
   async initialize(): Promise<boolean> {
     try {
+      // 如果管理器已被销毁，重新创建
+      if (!this.manager || this.manager.state === undefined) {
+        this.manager = new BleManager();
+      }
+
       const hasPermissions = await this.requestPermissions();
       if (!hasPermissions) {
         return false;
@@ -26,6 +31,19 @@ class BluetoothService {
       return true;
     } catch (error) {
       console.error('蓝牙初始化失败:', error);
+      // 如果初始化失败，尝试重新创建管理器
+      try {
+        this.manager = new BleManager();
+        const hasPermissions = await this.requestPermissions();
+        if (hasPermissions) {
+          const state = await this.manager.state();
+          if (state === 'PoweredOn') {
+            return true;
+          }
+        }
+      } catch (retryError) {
+        console.error('重新初始化蓝牙失败:', retryError);
+      }
       return false;
     }
   }
@@ -64,6 +82,22 @@ class BluetoothService {
                 PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
               );
               console.log('蓝牙扫描权限结果:', bluetoothScanPermission);
+
+              // 只有在权限被明确拒绝时才提醒用户
+              if (
+                bluetoothScanPermission === PermissionsAndroid.RESULTS.DENIED
+              ) {
+                console.log('蓝牙扫描权限被拒绝，但不强制要求');
+              } else if (
+                bluetoothScanPermission ===
+                PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN
+              ) {
+                console.log('蓝牙扫描权限不再询问，但可能已经授予');
+              } else if (
+                bluetoothScanPermission === PermissionsAndroid.RESULTS.GRANTED
+              ) {
+                console.log('蓝牙扫描权限已授予');
+              }
             }
 
             if (PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT) {
@@ -72,6 +106,23 @@ class BluetoothService {
                   PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
                 );
               console.log('蓝牙连接权限结果:', bluetoothConnectPermission);
+
+              // 只有在权限被明确拒绝时才提醒用户
+              if (
+                bluetoothConnectPermission === PermissionsAndroid.RESULTS.DENIED
+              ) {
+                console.log('蓝牙连接权限被拒绝，但不强制要求');
+              } else if (
+                bluetoothConnectPermission ===
+                PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN
+              ) {
+                console.log('蓝牙连接权限不再询问，但可能已经授予');
+              } else if (
+                bluetoothConnectPermission ===
+                PermissionsAndroid.RESULTS.GRANTED
+              ) {
+                console.log('蓝牙连接权限已授予');
+              }
             }
           } catch (bluetoothError) {
             console.log(
@@ -79,7 +130,6 @@ class BluetoothService {
               bluetoothError,
             );
           }
-
           return true;
         } else {
           console.log('位置权限被拒绝');
@@ -110,15 +160,27 @@ class BluetoothService {
   ): Promise<void> {
     return new Promise((resolve, reject) => {
       let isScanning = true;
+      let hasFoundDevices = false;
 
       this.manager.startDeviceScan(null, null, (error, device) => {
         if (error) {
           console.error('扫描错误:', error);
+
+          // 只有在权限相关错误时才提示用户
+          if (error.message && error.message.includes('permission')) {
+            Alert.alert(
+              '蓝牙权限不足',
+              '扫描蓝牙设备失败，请检查应用的蓝牙和位置权限设置。',
+              [{ text: '确定' }],
+            );
+          }
+
           reject(error);
           return;
         }
 
         if (device && device.name && isScanning) {
+          hasFoundDevices = true;
           onDeviceFound(device);
         }
       });
@@ -127,6 +189,7 @@ class BluetoothService {
       setTimeout(() => {
         isScanning = false;
         this.manager.stopDeviceScan();
+        console.log(`扫描完成，${hasFoundDevices ? '发现设备' : '未发现设备'}`);
         resolve();
       }, timeout);
     });
@@ -268,8 +331,27 @@ class BluetoothService {
 
   // 销毁蓝牙管理器
   destroy(): void {
-    this.manager.destroy();
-    this.connectedDevice = null;
+    try {
+      // 先断开当前连接的设备
+      if (this.connectedDevice) {
+        this.manager
+          .cancelDeviceConnection(this.connectedDevice.id)
+          .catch(error => {
+            console.log('断开连接时出错:', error);
+          });
+      }
+
+      // 停止扫描
+      this.manager.stopDeviceScan();
+
+      // 销毁管理器
+      this.manager.destroy();
+
+      // 清理状态
+      this.connectedDevice = null;
+    } catch (error) {
+      console.error('销毁蓝牙管理器时出错:', error);
+    }
   }
 }
 

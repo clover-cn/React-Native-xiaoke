@@ -7,7 +7,7 @@ import apiService from '../services/api';
 import BluetoothService from '../services/bluetoothService';
 
 // 创建蓝牙服务单例实例
-const bluetoothService = new BluetoothService();
+let bluetoothService = new BluetoothService();
 // 单例存储实例（如需分命名空间，可新建不同 id 的 MMKV 实例）
 const mmkv = new MMKV();
 
@@ -282,12 +282,28 @@ export function destroy() {
  */
 export function InitialBluetooth() {
   return new Promise(async (resolve, reject) => {
-    console.log('初始化蓝牙');
-    let res = await bluetoothService.initialize();
-    console.log('初始化蓝牙结果:', res);
-    await bluetoothService.scanDevices((e) => {
-      console.log('扫描到设备:', e);
-    });
+    try {
+      console.log('初始化蓝牙');
+
+      // 确保有可用的蓝牙服务实例
+      if (!bluetoothService) {
+        bluetoothService = new BluetoothService();
+      }
+
+      let res = await bluetoothService.initialize();
+      console.log('初始化蓝牙结果:', res);
+
+      if (res) {
+        await bluetoothService.scanDevices(e => {
+          console.log('扫描到设备:', e);
+        });
+        resolve(res);
+      } else {
+        reject(new Error('蓝牙初始化失败'));
+      }
+    } catch (error) {
+      console.error('InitialBluetooth 出错:', error);
+      reject(error);
+    }
   });
 }
-
