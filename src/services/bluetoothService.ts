@@ -492,6 +492,92 @@ class BluetoothService {
     }
   }
 
+  // 获取所有已连接的设备
+  async getConnectedDevices(): Promise<Device[]> {
+    try {
+      const connectedDevices = await this.manager.connectedDevices([]);
+      console.log(
+        '已连接的设备:',
+        connectedDevices.map(d => ({ id: d.id, name: d.name })),
+      );
+      return connectedDevices;
+    } catch (error) {
+      console.error('获取已连接设备失败:', error);
+      return [];
+    }
+  }
+
+  // 强制断开所有已连接的设备
+  async disconnectAllDevices(): Promise<void> {
+    try {
+      const connectedDevices = await this.getConnectedDevices();
+
+      if (connectedDevices.length === 0) {
+        console.log('没有已连接的设备');
+        return;
+      }
+
+      console.log(
+        `发现 ${connectedDevices.length} 个已连接的设备，开始断开...`,
+      );
+
+      // 并行断开所有设备
+      const disconnectPromises = connectedDevices.map(async device => {
+        try {
+          console.log(`断开设备: ${device.name} (${device.id})`);
+          await this.manager.cancelDeviceConnection(device.id);
+          console.log(`设备 ${device.name} 已断开`);
+        } catch (error) {
+          console.error(`断开设备 ${device.name} 失败:`, error);
+        }
+      });
+
+      await Promise.all(disconnectPromises);
+
+      // 清理本地状态
+      this.connectedDevice = null;
+      console.log('所有设备已断开连接');
+    } catch (error) {
+      console.error('断开所有设备失败:', error);
+    }
+  }
+
+  // 清理并重新初始化（解决连接状态不一致的问题）
+  async forceReset(): Promise<boolean> {
+    try {
+      console.log('开始强制重置蓝牙管理器...');
+
+      // 1. 断开所有设备
+      await this.disconnectAllDevices();
+
+      // 2. 停止扫描
+      this.manager.stopDeviceScan();
+
+      // 3. 销毁当前管理器
+      this.manager.destroy();
+
+      // 4. 等待一小段时间确保资源释放
+      await new Promise<void>(resolve => setTimeout(resolve, 500));
+
+      // 5. 重新创建管理器
+      this.manager = new BleManager();
+
+      // 6. 重新初始化
+      const initialized = await this.initialize();
+
+      if (initialized) {
+        console.log('蓝牙管理器重置成功');
+      } else {
+        console.log('蓝牙管理器重置后初始化失败');
+      }
+
+      return initialized;
+    } catch (error) {
+      console.error('强制重置失败:', error);
+      return false;
+    }
+  }
+
   // 销毁蓝牙管理器
   destroy(_isCancelledRef: boolean): void {
     try {
@@ -503,6 +589,8 @@ class BluetoothService {
           .catch(error => {
             console.log('断开连接时出错:', error);
           });
+      } else {
+        this.disconnectAllDevices();
       }
 
       // 停止扫描
