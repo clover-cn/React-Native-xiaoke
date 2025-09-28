@@ -530,7 +530,6 @@ class BluetoothService {
       );
       return connectedDevices;
     } catch (error) {
-      console.error('获取已连接设备失败:', error);
       return [];
     }
   }
