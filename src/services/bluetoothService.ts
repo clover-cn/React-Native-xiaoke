@@ -237,15 +237,6 @@ class BluetoothService {
 
       this.connectedDevice = device;
       console.log('设备连接成功:', device.name);
-
-      // 自动获取并打印服务和特征值信息
-      try {
-        const servicesInfo = await this.getDeviceServicesAndCharacteristics();
-        console.log('设备服务信息:', JSON.stringify(servicesInfo, null, 2));
-      } catch (serviceError) {
-        console.error('获取服务信息失败:', serviceError);
-      }
-
       return device;
     } catch (error: any) {
       console.error('连接设备失败:', error);
