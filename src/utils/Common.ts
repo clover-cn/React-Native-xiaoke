@@ -317,6 +317,15 @@ export function InitialBluetooth(mac: string) {
             console.log('找到目标设备，停止扫描', e.id);
             let res = await bluetoothService.connectToDevice(e.id);
             console.log('连接设备结果:', res);
+            // // 获取可写特征值（用于发送数据）
+            // const writableChars =
+            //   await bluetoothService.getWritableCharacteristics();
+            // console.log('可写特征值:', writableChars);
+
+            // // 获取可通知特征值（用于监听数据）
+            // const notifiableChars =
+            //   await bluetoothService.getNotifiableCharacteristics();
+            // console.log('可通知特征值:', notifiableChars);
           }
         });
         resolve(res);

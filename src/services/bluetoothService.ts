@@ -232,21 +232,26 @@ class BluetoothService {
   // 连接到设备
   async connectToDevice(deviceId: string): Promise<Device> {
     try {
-      
       const device = await this.manager.connectToDevice(deviceId);
       await device.discoverAllServicesAndCharacteristics();
 
       this.connectedDevice = device;
       console.log('设备连接成功:', device.name);
 
+      // 自动获取并打印服务和特征值信息
+      try {
+        const servicesInfo = await this.getDeviceServicesAndCharacteristics();
+        console.log('设备服务信息:', JSON.stringify(servicesInfo, null, 2));
+      } catch (serviceError) {
+        console.error('获取服务信息失败:', serviceError);
+      }
+
       return device;
     } catch (error: any) {
       console.error('连接设备失败:', error);
       throw error;
     }
-  }
-
-  // 断开设备连接
+  } // 断开设备连接
   async disconnectDevice(): Promise<void> {
     if (this.connectedDevice) {
       try {
@@ -340,6 +345,145 @@ class BluetoothService {
   // 获取当前连接的设备
   getConnectedDevice(): Device | null {
     return this.connectedDevice;
+  }
+
+  // 获取设备的所有服务和特征值
+  async getDeviceServicesAndCharacteristics(): Promise<{
+    services: Array<{
+      uuid: string;
+      characteristics: Array<{
+        uuid: string;
+        isReadable: boolean;
+        isWritableWithoutResponse: boolean;
+        isWritableWithResponse: boolean;
+        isNotifiable: boolean;
+        isIndicatable: boolean;
+      }>;
+    }>;
+  } | null> {
+    if (!this.connectedDevice) {
+      throw new Error('没有连接的设备');
+    }
+
+    try {
+      // 获取所有服务
+      const services = await this.connectedDevice.services();
+      const servicesInfo = [];
+
+      for (const service of services) {
+        // 获取每个服务的特征值
+        const characteristics = await service.characteristics();
+
+        const characteristicsInfo = [];
+
+        for (const characteristic of characteristics) {
+          characteristicsInfo.push({
+            uuid: characteristic.uuid,
+            isReadable: characteristic.isReadable,
+            isWritableWithoutResponse: characteristic.isWritableWithoutResponse,
+            isWritableWithResponse: characteristic.isWritableWithResponse,
+            isNotifiable: characteristic.isNotifiable,
+            isIndicatable: characteristic.isIndicatable,
+          });
+        }
+
+        servicesInfo.push({
+          uuid: service.uuid,
+          characteristics: characteristicsInfo,
+        });
+      }
+
+      return { services: servicesInfo };
+    } catch (error) {
+      console.error('获取服务和特征值失败:', error);
+      throw error;
+    }
+  }
+
+  // 获取可写的特征值（用于发送数据）
+  async getWritableCharacteristics(): Promise<
+    Array<{
+      serviceUUID: string;
+      characteristicUUID: string;
+      withoutResponse: boolean;
+      withResponse: boolean;
+    }>
+  > {
+    const servicesInfo = await this.getDeviceServicesAndCharacteristics();
+    const writableCharacteristics = [];
+
+    if (servicesInfo) {
+      for (const service of servicesInfo.services) {
+        for (const characteristic of service.characteristics) {
+          if (
+            characteristic.isWritableWithoutResponse ||
+            characteristic.isWritableWithResponse
+          ) {
+            writableCharacteristics.push({
+              serviceUUID: service.uuid,
+              characteristicUUID: characteristic.uuid,
+              withoutResponse: characteristic.isWritableWithoutResponse,
+              withResponse: characteristic.isWritableWithResponse,
+            });
+          }
+        }
+      }
+    }
+
+    return writableCharacteristics;
+  }
+
+  // 获取可读的特征值（用于读取数据）
+  async getReadableCharacteristics(): Promise<
+    Array<{
+      serviceUUID: string;
+      characteristicUUID: string;
+    }>
+  > {
+    const servicesInfo = await this.getDeviceServicesAndCharacteristics();
+    const readableCharacteristics = [];
+
+    if (servicesInfo) {
+      for (const service of servicesInfo.services) {
+        for (const characteristic of service.characteristics) {
+          if (characteristic.isReadable) {
+            readableCharacteristics.push({
+              serviceUUID: service.uuid,
+              characteristicUUID: characteristic.uuid,
+            });
+          }
+        }
+      }
+    }
+
+    console.log('可读特征值:', readableCharacteristics);
+    return readableCharacteristics;
+  }
+
+  // 获取可通知的特征值（用于监听数据变化）
+  async getNotifiableCharacteristics(): Promise<
+    Array<{
+      serviceUUID: string;
+      characteristicUUID: string;
+    }>
+  > {
+    const servicesInfo = await this.getDeviceServicesAndCharacteristics();
+    const notifiableCharacteristics = [];
+
+    if (servicesInfo) {
+      for (const service of servicesInfo.services) {
+        for (const characteristic of service.characteristics) {
+          if (characteristic.isNotifiable || characteristic.isIndicatable) {
+            notifiableCharacteristics.push({
+              serviceUUID: service.uuid,
+              characteristicUUID: characteristic.uuid,
+            });
+          }
+        }
+      }
+    }
+
+    return notifiableCharacteristics;
   }
 
   // 检查设备连接状态
