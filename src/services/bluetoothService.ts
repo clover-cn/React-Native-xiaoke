@@ -232,8 +232,7 @@ class BluetoothService {
   // 连接到设备
   async connectToDevice(deviceId: string): Promise<Device> {
     try {
-      this.manager.stopDeviceScan(); // 停止扫描
-
+      
       const device = await this.manager.connectToDevice(deviceId);
       await device.discoverAllServicesAndCharacteristics();
 

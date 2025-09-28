@@ -310,11 +310,13 @@ export function InitialBluetooth(mac: string) {
       console.log('初始化蓝牙结果:', res);
 
       if (res) {
-        await bluetoothService.scanDevices(e => {
+        await bluetoothService.scanDevices(async e => {
           console.log('扫描到设备:', e);
           if (mac && e.id === bluetoothId) {
             bluetoothService.stopScan();
             console.log('找到目标设备，停止扫描', e.id);
+            let res = await bluetoothService.connectToDevice(e.id);
+            console.log('连接设备结果:', res);
           }
         });
         resolve(res);
