@@ -265,28 +265,8 @@ class BluetoothService {
       } catch (cleanupError) {
         console.log('清理连接状态时出错:', cleanupError);
       }
-
-      // 根据错误类型提供更友好的错误信息
-      let errorMessage = '连接设备失败';
-      if (error.message) {
-        if (
-          error.message.includes('超时') ||
-          error.message.includes('timeout')
-        ) {
-          errorMessage = '连接设备超时，请确保设备在范围内且可连接';
-        } else if (error.message.includes('permission')) {
-          errorMessage = '蓝牙权限不足，请检查应用权限设置';
-        } else if (
-          error.message.includes('not found') ||
-          error.message.includes('找不到')
-        ) {
-          errorMessage = '未找到指定的蓝牙设备';
-        } else {
-          errorMessage = `连接失败: ${error.message}`;
-        }
-      }
-
-      throw new Error(errorMessage);
+      
+      throw new Error('连接设备失败');
     }
   }
 
