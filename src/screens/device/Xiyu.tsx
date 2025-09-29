@@ -89,6 +89,8 @@ const Xiyu: React.FC = () => {
   // 开始4g消费
   const start4GConsumption = async () => {
     console.log('检查设备状态');
+    bluetoothPayment();
+    return
     showLoading({
       title: '启动中...',
       mask: true,

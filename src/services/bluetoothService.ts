@@ -385,37 +385,85 @@ class BluetoothService {
     }
 
     try {
+      const isConnected = await this.connectedDevice.isConnected();
+      if (!isConnected) {
+        throw new Error('设备已断开连接');
+      }
+      // 执行服务发现
+      await this.connectedDevice.discoverAllServicesAndCharacteristics();
+      
       // 获取所有服务
       const services = await this.connectedDevice.services();
+      // console.log(`发现 ${services.length} 个服务`);
+      
       const servicesInfo = [];
 
-      for (const service of services) {
-        // 获取每个服务的特征值
-        const characteristics = await service.characteristics();
+      for (let i = 0; i < services.length; i++) {
+        const service = services[i];
+        // console.log(`处理服务 ${i + 1}/${services.length}: ${service.uuid}`);
 
-        const characteristicsInfo = [];
+        try {
+          // 获取每个服务的特征值
+          const characteristics = await service.characteristics();
+          // console.log(`服务 ${service.uuid} 有 ${characteristics.length} 个特征值`);
 
-        for (const characteristic of characteristics) {
-          characteristicsInfo.push({
-            uuid: characteristic.uuid,
-            isReadable: characteristic.isReadable,
-            isWritableWithoutResponse: characteristic.isWritableWithoutResponse,
-            isWritableWithResponse: characteristic.isWritableWithResponse,
-            isNotifiable: characteristic.isNotifiable,
-            isIndicatable: characteristic.isIndicatable,
+          const characteristicsInfo = [];
+
+          for (let j = 0; j < characteristics.length; j++) {
+            const characteristic = characteristics[j];
+            // console.log(`处理特征值 ${j + 1}/${characteristics.length}: ${characteristic.uuid}`);
+
+            try {
+              characteristicsInfo.push({
+                uuid: characteristic.uuid,
+                isReadable: characteristic.isReadable,
+                isWritableWithoutResponse: characteristic.isWritableWithoutResponse,
+                isWritableWithResponse: characteristic.isWritableWithResponse,
+                isNotifiable: characteristic.isNotifiable,
+                isIndicatable: characteristic.isIndicatable,
+              });
+            } catch (charError) {
+              console.error(`获取特征值 ${characteristic.uuid} 属性失败:`, charError);
+              // 继续处理其他特征值，不中断整个流程
+              characteristicsInfo.push({
+                uuid: characteristic.uuid,
+                isReadable: false,
+                isWritableWithoutResponse: false,
+                isWritableWithResponse: false,
+                isNotifiable: false,
+                isIndicatable: false,
+              });
+            }
+          }
+
+          servicesInfo.push({
+            uuid: service.uuid,
+            characteristics: characteristicsInfo,
+          });
+        } catch (serviceError) {
+          console.error(`获取服务 ${service.uuid} 的特征值失败:`, serviceError);
+          // 继续处理其他服务，不中断整个流程
+          servicesInfo.push({
+            uuid: service.uuid,
+            characteristics: [],
           });
         }
-
-        servicesInfo.push({
-          uuid: service.uuid,
-          characteristics: characteristicsInfo,
-        });
       }
 
+      // console.log(`成功获取 ${servicesInfo.length} 个服务信息`);
       return { services: servicesInfo };
-    } catch (error) {
+    } catch (error: any) {
       console.error('获取服务和特征值失败:', error);
-      throw error;
+      
+      // 提供更详细的错误信息
+      if (error.message && error.message.includes('disconnected')) {
+        throw new Error('设备连接已断开，请重新连接设备');
+      } else if (error.reason) {
+        console.error('错误详情:', error.reason);
+        throw new Error(`蓝牙操作失败: ${error.reason}`);
+      } else {
+        throw new Error('获取设备服务信息失败，请重试');
+      }
     }
   }
 
