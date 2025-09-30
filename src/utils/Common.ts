@@ -312,6 +312,8 @@ export function InitialBluetooth(mac: string) {
       await bluetoothService.scanDevices(async e => {
         console.log('搜索到的蓝牙设备', e);
         if (e.id === bluetoothId) {
+          console.log('找到了目标蓝牙设备，准备连接...');
+
           bluetoothService.stopScan();
           let res = await bluetoothService.connectToDevice(bluetoothId);
           console.log('连接蓝牙结果', res);
@@ -319,22 +321,32 @@ export function InitialBluetooth(mac: string) {
             bluetoothId,
           );
           console.log('设备全部特征值', res2);
+          // let uuid = '0000FFF0-0000-1000-8000-00805F9B34FB';
+          let uuid = 'FFF0';
+          let filteredArray = res2.services.filter(
+            item => item.uuid.toLowerCase() === uuid.toLowerCase(),
+          );
+          console.log('过滤后的特征值', filteredArray);
+          if (filteredArray.length > 0) {
+            console.log('9141蓝牙模块');
+            await bluetoothService.monitorCharacteristic(
+              ServiceID_9141,
+              WriteCharacteristicUUID_9141,
+              e => {
+                console.log('监听到蓝牙数据', e);
+              },
+            );
+            const hexString2 = '7B863313061984905000280041DC7D';
+            await bluetoothService.writeCharacteristic(
+              ServiceID_9141,
+              NotifyCharacteristicUUID_9141,
+              hexString2,
+            );
+          } else {
+            console.log('722蓝牙模块');
+          }
         }
       });
-
-      // const hexString2 = '7B863313061984905000280041DC7D';
-      // await bluetoothService.monitorCharacteristic(
-      //   ServiceID_9141,
-      //   WriteCharacteristicUUID_9141,
-      //   e => {
-      //     console.log('监听到蓝牙数据', e);
-      //   },
-      // );
-      // await bluetoothService.writeCharacteristic(
-      //   ServiceID_9141,
-      //   NotifyCharacteristicUUID_9141,
-      //   hexString2,
-      // );
     } catch (error) {
       console.error('InitialBluetooth 出错:', error);
       reject(error);
