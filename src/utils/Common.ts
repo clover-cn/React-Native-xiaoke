@@ -5,12 +5,12 @@ import { ComputeType, ComputeResult } from '../types/commonType';
 import { ToastAndroid } from 'react-native';
 import apiService from '../services/api';
 import BluetoothService from '../services/bluetoothService';
-
+import globalData from './globalData';
 // 创建蓝牙服务单例实例
 let bluetoothService = new BluetoothService();
 // 单例存储实例（如需分命名空间，可新建不同 id 的 MMKV 实例）
 const mmkv = new MMKV();
-
+let shouldContinueCheck = false;
 export type StorageGetType = 'string' | 'number' | 'boolean';
 
 export const storage = {
@@ -380,15 +380,7 @@ function crc16Modbus(hexString: string) {
 /**
  * 初始化蓝牙
  */
-export function InitialBluetooth(mac: string) {
-  // 722蓝牙
-  let ServiceID_722 = '0000FEE9-0000-1000-8000-00805F9B34FB'; //蓝牙模块固定服务ID
-  let WriteCharacteristicUUID_722 = 'D44BC439-ABFD-45A2-B575-925416129600'; // 可写特征值uuid
-  let NotifyCharacteristicUUID_722 = 'D44BC439-ABFD-45A2-B575-925416129601'; // 通知特征值UUID
-  // 9141蓝牙模块
-  let ServiceID_9141 = '0000FFF0-0000-1000-8000-00805F9B34FB'; //蓝牙模块固定服务ID
-  let WriteCharacteristicUUID_9141 = '0000FFF1-0000-1000-8000-00805F9B34FB'; // 可写特征值uuid
-  let NotifyCharacteristicUUID_9141 = '0000FFF2-0000-1000-8000-00805F9B34FB'; // 通知特征值UUID
+export function InitialBluetooth(mac: string, deviceNo: string) {
   return new Promise(async (resolve, reject) => {
     try {
       let bluetoothId = '';
@@ -429,25 +421,17 @@ export function InitialBluetooth(mac: string) {
           console.log('过滤后的特征值', filteredArray);
           if (filteredArray.length > 0) {
             console.log('9141蓝牙模块');
-            await bluetoothService.monitorCharacteristic(
-              ServiceID_9141,
-              WriteCharacteristicUUID_9141,
-              hexString => {
-                console.log('监听到蓝牙数据', hexString);
-                if (hexString.startsWith('7b') && hexString.endsWith('7d')) {
-                  let data = hexString.slice(2, -2);
-                  if (crc16Modbus(data) == '0000') {
-                    console.log('CRC校验成功======>', hexString);
-                  }
-                }
-              },
-            );
-            const hexString2 = '7B863313061984905000280041DC7D';
-            await bluetoothService.writeCharacteristic(
-              ServiceID_9141,
-              NotifyCharacteristicUUID_9141,
-              hexString2,
-            );
+            globalData.bluetooth_9141 = true;
+
+            // 然后手动控制通知的启用/禁用
+            // await bluetoothService.notifyBLECharacteristicValueChange(
+            //   globalData.serviceID,
+            //   globalData.notifyCharacteristicUUID,
+            //   true, // 需要接收数据时启用
+            // );
+
+            shouldContinueCheck = true;
+            visitationBluetoothValue(mac, deviceNo); // 同步调用
           } else {
             console.log('722蓝牙模块');
           }
@@ -458,4 +442,31 @@ export function InitialBluetooth(mac: string) {
       reject(error);
     }
   });
+}
+
+async function visitationBluetoothValue(mac: string, deviceNo: string) {
+  console.log('开始巡检');
+  let res = await apiService.agreementGather(deviceNo);
+  console.log('巡检结果', res);
+
+  await bluetoothService.monitorCharacteristic(
+    globalData.serviceID,
+    globalData.notifyCharacteristicUUID,
+    hexString => {
+      console.log('监听到蓝牙数据', hexString);
+      if (hexString.startsWith('7b') && hexString.endsWith('7d')) {
+        let data = hexString.slice(2, -2);
+        if (crc16Modbus(data) == '0000') {
+          console.log('CRC校验成功======>', hexString);
+        }
+      }
+    },
+    true, // 设置为 false，不自动启用通知
+  );
+  const hexString2 = '7B863313061984905000280041DC7D';
+  await bluetoothService.writeCharacteristic(
+    globalData.serviceID,
+    globalData.writeCharacteristicUUID,
+    hexString2,
+  );
 }

@@ -243,6 +243,22 @@ class ApiService {
     );
     return response.data;
   }
+  /**
+   * 巡检数据
+   * -URL: /projects/agreement/agreementGather
+   */
+  async agreementGather(devNo: string): Promise<string> {
+    const response = await httpClient.post<string>(
+      '/projects/agreement/agreementGather',
+      { devNo },
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      },
+    );
+    return response.data;
+  }
 
   // 示例开始
   // 使用DRS服务检查蓝牙状态

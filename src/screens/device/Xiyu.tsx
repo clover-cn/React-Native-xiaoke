@@ -89,7 +89,7 @@ const Xiyu: React.FC = () => {
   const start4GConsumption = async () => {
     console.log('检查设备状态');
     bluetoothPayment();
-    return
+    return;
     showLoading({
       title: '启动中...',
       mask: true,
@@ -366,7 +366,7 @@ const Xiyu: React.FC = () => {
   // 蓝牙消费
   const bluetoothPayment = async () => {
     try {
-      await InitialBluetooth(deviceInfo.mac);
+      await InitialBluetooth(deviceInfo.mac, deviceInfo.deviceNo);
       hideLoading(); // 隐藏Loading
       console.log('蓝牙初始化成功');
     } catch (error: any) {

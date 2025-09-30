@@ -327,6 +327,7 @@ class BluetoothService {
     }
 
     try {
+      await this.offBLECharacteristicValueChange();
       await BleManager.disconnect(this.connectedDevice.id);
       this.connectedDevice = null;
     } catch (error) {
@@ -384,11 +385,18 @@ class BluetoothService {
     }
   }
 
-  /**监听特征值 */
+  /**
+   * 监听特征值(注意：内部会自己启用监听通知，可以传参关闭)
+   * @param serviceUUID
+   * @param characteristicUUID
+   * @param autoStartNotification
+   * @param onDataReceived
+   */
   async monitorCharacteristic(
     serviceUUID: string,
     characteristicUUID: string,
     onDataReceived: (data: any) => void,
+    autoStartNotification: boolean = true, // 新增参数：是否自动启用通知
   ): Promise<void> {
     if (!this.connectedDevice) {
       throw new Error('没有连接的设备');
@@ -402,29 +410,42 @@ class BluetoothService {
     );
     const existing = this.notificationListeners.get(key);
     if (existing) {
+      console.log(
+        `特征值 ${serviceUUID}/${characteristicUUID} 已在监听中，先移除旧监听器`,
+      );
       existing.remove();
       this.notificationListeners.delete(key);
     }
 
     try {
-      await BleManager.startNotification(
-        deviceId,
-        serviceUUID,
-        characteristicUUID,
-      );
+      // 只有在需要时才启用通知
+      if (autoStartNotification) {
+        await BleManager.startNotification(
+          deviceId,
+          serviceUUID,
+          characteristicUUID,
+        );
+        console.log(
+          `已自动启用特征值通知: ${serviceUUID}/${characteristicUUID}`,
+        );
+      } else {
+        console.log(
+          `仅设置监听器，不启用通知: ${serviceUUID}/${characteristicUUID}`,
+        );
+      }
+
       // 存储拼接后数据
       let savedHexString = '';
       const subscription = BleManager.onDidUpdateValueForCharacteristic(
         (event: BleManagerDidUpdateValueForCharacteristicEvent) => {
-          
           if (
             event.peripheral === deviceId &&
             event.service.toUpperCase() === serviceUUID.toUpperCase() &&
             event.characteristic.toUpperCase() ===
               characteristicUUID.toUpperCase()
           ) {
-            console.log('收到数据:', event.value);
-            console.log('查看拼接函数是否为空：', savedHexString);
+            // console.log('收到数据:', event.value);
+            console.log('拼接的数据', savedHexString);
 
             const { packets, cache } = this.arrayBufferToHex(
               event.value,
@@ -439,9 +460,124 @@ class BluetoothService {
       );
 
       this.notificationListeners.set(key, subscription);
+      console.log(`已设置特征值监听器: ${serviceUUID}/${characteristicUUID}`);
     } catch (error: any) {
       console.error('开始监听失败:', error);
       throw error;
+    }
+  }
+
+  /**启用蓝牙低功耗设备特征值变化时的 notify 功能，订阅特征 */
+  async notifyBLECharacteristicValueChange(
+    serviceUUID: string,
+    characteristicUUID: string,
+    state: boolean = true,
+  ): Promise<void> {
+    if (!this.connectedDevice) {
+      throw new Error('没有连接的设备');
+    }
+
+    try {
+      const deviceId = this.connectedDevice.id;
+
+      // 检查设备是否仍然连接
+      const isConnected = await BleManager.isPeripheralConnected(deviceId);
+      if (!isConnected) {
+        throw new Error('设备已断开连接');
+      }
+
+      if (state) {
+        // 启用通知
+        await BleManager.startNotification(
+          deviceId,
+          serviceUUID,
+          characteristicUUID,
+        );
+        console.log(`已启用特征值通知: ${serviceUUID}/${characteristicUUID}`);
+      } else {
+        // 禁用通知
+        await BleManager.stopNotification(
+          deviceId,
+          serviceUUID,
+          characteristicUUID,
+        );
+        console.log(`已禁用特征值通知: ${serviceUUID}/${characteristicUUID}`);
+
+        // 移除对应的监听器
+        const key = this.getNotificationKey(
+          deviceId,
+          serviceUUID,
+          characteristicUUID,
+        );
+        const existing = this.notificationListeners.get(key);
+        if (existing) {
+          existing.remove();
+          this.notificationListeners.delete(key);
+        }
+      }
+    } catch (error: any) {
+      console.error('切换特征值通知状态失败:', error);
+      throw new Error(
+        `${state ? '启用' : '禁用'}特征值通知失败: ${error.message}`,
+      );
+    }
+  }
+
+  /**取消监听特征值变化 */
+  async offBLECharacteristicValueChange(
+    serviceUUID?: string,
+    characteristicUUID?: string,
+  ): Promise<void> {
+    if (!this.connectedDevice) {
+      throw new Error('没有连接的设备');
+    }
+
+    try {
+      const deviceId = this.connectedDevice.id;
+
+      if (serviceUUID && characteristicUUID) {
+        // 取消指定特征值的监听
+        const key = this.getNotificationKey(
+          deviceId,
+          serviceUUID,
+          characteristicUUID,
+        );
+        const existing = this.notificationListeners.get(key);
+        if (existing) {
+          existing.remove();
+          this.notificationListeners.delete(key);
+          console.log(`已取消监听特征值: ${serviceUUID}/${characteristicUUID}`);
+        }
+
+        // 停止该特征值的通知
+        try {
+          await BleManager.stopNotification(
+            deviceId,
+            serviceUUID,
+            characteristicUUID,
+          );
+        } catch (stopError) {
+          console.log('停止通知时出错:', stopError);
+        }
+      } else {
+        // 取消所有特征值的监听
+        const keysToRemove: string[] = [];
+        this.notificationListeners.forEach((subscription, key) => {
+          if (key.startsWith(`${deviceId}:`)) {
+            subscription.remove();
+            keysToRemove.push(key);
+          }
+        });
+
+        keysToRemove.forEach(key => {
+          this.notificationListeners.delete(key);
+        });
+
+        console.log(`已取消设备 ${deviceId} 的所有特征值监听`);
+      }
+    } catch (error: any) {
+      console.error('取消特征值监听失败:', error);
+      throw new Error(`取消特征值监听失败: ${error.message}`);
     }
   }
 
@@ -657,6 +793,7 @@ class BluetoothService {
   /**断开所有设备 */
   async disconnectAllDevices(): Promise<void> {
     try {
+      await this.offBLECharacteristicValueChange();
       const connectedDevices = await this.getConnectedDevices();
 
       if (connectedDevices.length === 0) {
@@ -691,7 +828,6 @@ class BluetoothService {
       console.log('开始强制重置蓝牙管理器...');
 
       await this.disconnectAllDevices();
-
       this.stopScan();
 
       this.cleanupNotificationListeners();
