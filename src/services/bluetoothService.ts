@@ -335,11 +335,12 @@ class BluetoothService {
     }
   }
 
-  /**写入数据 */
+  /**写入数据（支持分段发送）*/
   async writeCharacteristic(
     serviceUUID: string,
     characteristicUUID: string,
     data: string,
+    maxChunkSize: number = 20, // 每段最大字节数
   ): Promise<void> {
     if (!this.connectedDevice) {
       throw new Error('没有连接的设备');
@@ -347,14 +348,36 @@ class BluetoothService {
 
     try {
       const bytes = this.encodeDataString(data);
-      // 简化：直接使用 writeWithoutResponse
-      await BleManager.writeWithoutResponse(
-        this.connectedDevice.id,
-        serviceUUID,
-        characteristicUUID,
-        bytes,
-      );
-      console.log('数据发送成功:', data);
+
+      // 如果数据较小，直接发送
+      if (bytes.length <= maxChunkSize) {
+        await BleManager.writeWithoutResponse(
+          this.connectedDevice.id,
+          serviceUUID,
+          characteristicUUID,
+          bytes,
+        );
+        console.log('数据发送成功:', data);
+        return;
+      }
+
+      // 分段发送
+      for (let i = 0; i < bytes.length; i += maxChunkSize) {
+        const chunk = bytes.slice(i, i + maxChunkSize);
+        await BleManager.writeWithoutResponse(
+          this.connectedDevice.id,
+          serviceUUID,
+          characteristicUUID,
+          chunk,
+        );
+
+        // 添加短暂延迟避免发送过快
+        if (i + maxChunkSize < bytes.length) {
+          await new Promise(resolve => setTimeout(() => resolve(undefined), 10));
+        }
+      }
+
+      console.log('分段数据发送成功:', data);
     } catch (error: any) {
       console.error('发送数据失败:', error);
       throw error;
