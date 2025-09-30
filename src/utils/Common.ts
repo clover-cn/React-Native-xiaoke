@@ -277,6 +277,106 @@ export function destroy() {
   bluetoothService.destroy(true);
 }
 
+/**字节转十六进制 */
+function arrayBufferToHex(arrayBuffer: any, cache: string) {
+  const byteArray = new Uint8Array(arrayBuffer);
+  let hexString = '';
+  for (let i = 0; i < byteArray.length; i++) {
+    hexString += byteArray[i].toString(16).padStart(2, '0');
+  }
+  hexString = cache + hexString;
+
+  // 修复：使用贪婪匹配，并且更精确地匹配完整数据包
+  // 数据包格式：7B + 数据 + 7D，数据中可能包含7D，所以需要找到真正的结束7D
+  let results = [];
+  let lastIndex = 0;
+  let startIndex = 0;
+
+  while (startIndex < hexString.length) {
+    // 查找7B开始标记
+    let start = hexString.indexOf('7b', startIndex);
+    if (start === -1) break;
+
+    // 从7B后面开始查找7D结束标记
+    let end = start + 2; // 跳过7B
+    let foundEnd = false;
+
+    while (end < hexString.length - 1) {
+      if (hexString.substring(end, end + 2).toLowerCase() === '7d') {
+        // 找到可能的结束标记，检查这个数据包是否完整
+        let potentialPacket = hexString.substring(start, end + 2);
+        let data = potentialPacket.slice(2, -2); // 去除7B和7D
+
+        // 检查CRC校验
+        if (crc16Modbus(data) === '0000') {
+          // CRC校验成功，这是一个完整的数据包
+          results.push(potentialPacket);
+          lastIndex = end + 2;
+          foundEnd = true;
+          break;
+        }
+      }
+      end += 2; // 每次移动一个字节（2个十六进制字符）
+    }
+
+    if (!foundEnd) {
+      // 没有找到有效的结束标记，可能是不完整的数据包
+      break;
+    }
+
+    startIndex = lastIndex;
+  }
+
+  // 如果没有找到完整的数据包，但缓存中有完整的数据包，尝试验证整个缓存
+  if (results.length === 0 && hexString.length > 4) {
+    if (hexString.startsWith('7b') && hexString.endsWith('7d')) {
+      let data = hexString.slice(2, -2);
+      if (crc16Modbus(data) === '0000') {
+        console.log('缓存CRC校验成功准备返回======>', hexString);
+        return {
+          packets: [hexString],
+          cache: '',
+        };
+      }
+    }
+  }
+
+  // 返回完整包和剩余缓存
+  return {
+    packets: results,
+    cache: hexString.slice(lastIndex),
+  };
+}
+
+/**crc16计算 */
+function crc16Modbus(hexString: string) {
+  // 将十六进制字符串转换为字节数组
+  var byteArray = [];
+  for (var i = 0; i < hexString.length; i += 2) {
+    byteArray.push(parseInt(hexString.substr(i, 2), 16));
+  }
+  var crc = 0xffff;
+  var i: number, j: number;
+  for (i = 0; i < byteArray.length; i++) {
+    crc ^= byteArray[i];
+    for (j = 0; j < 8; j++) {
+      if (crc & 0x0001) {
+        crc = (crc >> 1) ^ 0xa001;
+      } else {
+        crc = crc >> 1;
+      }
+    }
+  }
+  // 将结果拆分为低字节和高字节
+  var crcLow = crc & 0xff;
+  var crcHigh = (crc >> 8) & 0xff;
+  // 返回校验结果，低位在前高位在后，格式化为十六进制字符串
+  return (
+    crcLow.toString(16).toUpperCase().padStart(2, '0') +
+    crcHigh.toString(16).toUpperCase().padStart(2, '0')
+  );
+}
+
 /**
  * 初始化蓝牙
  */
@@ -332,8 +432,14 @@ export function InitialBluetooth(mac: string) {
             await bluetoothService.monitorCharacteristic(
               ServiceID_9141,
               WriteCharacteristicUUID_9141,
-              e => {
-                console.log('监听到蓝牙数据', e);
+              hexString => {
+                console.log('监听到蓝牙数据', hexString);
+                if (hexString.startsWith('7b') && hexString.endsWith('7d')) {
+                  let data = hexString.slice(2, -2);
+                  if (crc16Modbus(data) == '0000') {
+                    console.log('CRC校验成功======>', hexString);
+                  }
+                }
               },
             );
             const hexString2 = '7B863313061984905000280041DC7D';
