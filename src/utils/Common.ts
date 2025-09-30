@@ -11,6 +11,7 @@ let bluetoothService = new BluetoothService();
 // 单例存储实例（如需分命名空间，可新建不同 id 的 MMKV 实例）
 const mmkv = new MMKV();
 let shouldContinueCheck = false;
+let excludeConsumeId = ''; // 用于存储上报订单时排除的订单ID
 export type StorageGetType = 'string' | 'number' | 'boolean';
 
 export const storage = {
@@ -380,10 +381,15 @@ function crc16Modbus(hexString: string) {
 /**
  * 初始化蓝牙
  */
-export function InitialBluetooth(mac: string, deviceNo: string) {
+export function InitialBluetooth(
+  mac: string,
+  deviceNo: string,
+  excludeId = '',
+) {
   return new Promise(async (resolve, reject) => {
     try {
       let bluetoothId = '';
+      excludeConsumeId = excludeId;
       if (mac) {
         bluetoothId =
           mac.slice(0, 2) +
@@ -458,15 +464,43 @@ async function visitationBluetoothValue(mac: string, deviceNo: string) {
         let data = hexString.slice(2, -2);
         if (crc16Modbus(data) == '0000') {
           console.log('CRC校验成功======>', hexString);
+          if (data.includes('2a01')) {
+            delBluetoothOrders(data, deviceNo);
+          }
         }
       }
     },
     true, // 设置为 false，不自动启用通知
   );
-  const hexString2 = '7B863313061984905000280041DC7D';
   await bluetoothService.writeCharacteristic(
     globalData.serviceID,
     globalData.writeCharacteristicUUID,
-    hexString2,
+    res,
   );
+}
+
+async function delBluetoothOrders(data: string, deviceNo: string) {
+  let reqData = {
+    devNo: deviceNo,
+    encodeNotice: data,
+    excludeConsumeId: excludeConsumeId,
+  };
+  let res = await apiService.postCompleteNotice(reqData);
+  console.log('删除订单结果', res);
+  if (res.isEnd) {
+    shouldContinueCheck = false;
+    console.log('蓝牙启动前巡检数据完毕');
+    //取消所有监听事件
+    bluetoothService.offBLECharacteristicValueChange();
+    console.log('准备发送随机数');
+  } else {
+    shouldContinueCheck = true;
+    // 取消所有监听事件
+    bluetoothService.offBLECharacteristicValueChange();
+    await bluetoothService.writeCharacteristic(
+      globalData.serviceID,
+      globalData.writeCharacteristicUUID,
+      res.encodeAnswer,
+    );
+  }
 }

@@ -259,6 +259,17 @@ class ApiService {
     );
     return response.data;
   }
+  /**
+   * 删除设备订单(上报订单)
+   * -URL:  /orders/app/consume/blue/complete/notice
+   */
+  async postCompleteNotice(reqData: object): Promise<object> {
+    const response = await httpClient.post<object>(
+      '/orders/app/consume/blue/complete/notice',
+      reqData,
+    );
+    return response.data;
+  }
 
   // 示例开始
   // 使用DRS服务检查蓝牙状态
