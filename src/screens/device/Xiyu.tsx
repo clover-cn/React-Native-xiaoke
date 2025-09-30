@@ -25,7 +25,6 @@ import {
 } from '../../utils/Common';
 import { useFocusEffect, useRoute } from '@react-navigation/native';
 import { showLoading, hideLoading } from '../../services/loadingService';
-import BluetoothService from '../../services/bluetoothService';
 const Xiyu: React.FC = () => {
   const insets = useSafeAreaInsets(); // 获取安全区域边距
   // 接收参数
