@@ -413,33 +413,40 @@ export function InitialBluetooth(
           console.log('找到了目标蓝牙设备，准备连接...');
 
           bluetoothService.stopScan();
-          let res = await bluetoothService.connectToDevice(bluetoothId);
-          console.log('连接蓝牙结果', res);
-          let res2 = await bluetoothService.getDeviceServicesAndCharacteristics(
-            bluetoothId,
-          );
-          console.log('设备全部特征值', res2);
-          // let uuid = '0000FFF0-0000-1000-8000-00805F9B34FB';
-          let uuid = 'FFF0';
-          let filteredArray = res2.services.filter(
-            item => item.uuid.toLowerCase() === uuid.toLowerCase(),
-          );
-          console.log('过滤后的特征值', filteredArray);
-          if (filteredArray.length > 0) {
-            console.log('9141蓝牙模块');
-            globalData.bluetooth_9141 = true;
+          try {
+            const res = await bluetoothService.connectToDevice(bluetoothId);
+            console.log('连接蓝牙结果', res);
+            const res2 =
+              await bluetoothService.getDeviceServicesAndCharacteristics(
+                bluetoothId,
+              );
+            console.log('设备全部特征值', res2);
+            // let uuid = '0000FFF0-0000-1000-8000-00805F9B34FB';
+            const uuid = 'FFF0';
+            const filteredArray = res2.services.filter(
+              item => item.uuid.toLowerCase() === uuid.toLowerCase(),
+            );
+            console.log('过滤后的特征值', filteredArray);
+            if (filteredArray.length > 0) {
+              console.log('9141蓝牙模块');
+              globalData.bluetooth_9141 = true;
 
-            // 然后手动控制通知的启用/禁用
-            // await bluetoothService.notifyBLECharacteristicValueChange(
-            //   globalData.serviceID,
-            //   globalData.notifyCharacteristicUUID,
-            //   true, // 需要接收数据时启用
-            // );
+              // 然后手动控制通知的启用/禁用
+              // await bluetoothService.notifyBLECharacteristicValueChange(
+              //   globalData.serviceID,
+              //   globalData.notifyCharacteristicUUID,
+              //   true, // 需要接收数据时启用
+              // );
 
-            shouldContinueCheck = true;
-            visitationBluetoothValue(mac, deviceNo, success); // 同步调用
-          } else {
-            console.log('722蓝牙模块');
+              shouldContinueCheck = true;
+              visitationBluetoothValue(mac, deviceNo, success); // 同步调用
+            } else {
+              console.log('722蓝牙模块');
+            }
+          } catch (err) {
+            console.error('连接或获取服务失败:', err);
+            // 抛出让 scanDevices 捕获并 reject，从而被 InitialBluetooth 外层 try/catch 捕获
+            throw (err instanceof Error ? err : new Error(String(err)));
           }
         }
       });

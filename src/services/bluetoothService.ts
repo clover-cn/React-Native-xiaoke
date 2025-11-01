@@ -152,7 +152,7 @@ class BluetoothService {
 
   /**扫描蓝牙 */
   async scanDevices(
-    onDeviceFound: (device: Device) => void,
+    onDeviceFound: (device: Device) => void | Promise<void>,
     timeout: number = 10000,
   ): Promise<void> {
     await this.ensureManagerStarted();
@@ -162,6 +162,7 @@ class BluetoothService {
       let isScanning = true;
       let timeoutId: ReturnType<typeof setTimeout> | null = null;
       let settled = false;
+      let isHandlingCallback = false;
       this.isCancelledRef = false;
 
       const finalize = (shouldResolve: boolean, error?: Error) => {
@@ -192,7 +193,7 @@ class BluetoothService {
       this.cleanupScanListeners();
 
       this.discoverListener = BleManager.onDiscoverPeripheral(
-        (peripheral: Peripheral) => {
+        async (peripheral: Peripheral) => {
           this.knownDevices.set(peripheral.id, peripheral);
 
           if (!isScanning) {
@@ -201,10 +202,22 @@ class BluetoothService {
 
           if (peripheral.name) {
             hasFoundDevices = true;
-            onDeviceFound(peripheral);
 
-            if (this.isCancelledRef) {
-              finalize(true);
+            try {
+              const maybePromise = onDeviceFound(peripheral);
+              if (maybePromise && typeof (maybePromise as any).then === 'function') {
+                isHandlingCallback = true;
+                await maybePromise;
+                isHandlingCallback = false;
+              }
+              if (this.isCancelledRef) {
+                finalize(true);
+              }
+            } catch (cbError: any) {
+              isHandlingCallback = false;
+              const err =
+                cbError instanceof Error ? cbError : new Error(String(cbError));
+              finalize(false, err);
             }
           }
         },
@@ -212,6 +225,10 @@ class BluetoothService {
 
       this.stopScanListener = BleManager.onStopScan(() => {
         if (!isScanning) {
+          return;
+        }
+        // 如果正在处理回调，等待回调结束后由回调触发 finalize
+        if (isHandlingCallback) {
           return;
         }
         isScanning = false;
