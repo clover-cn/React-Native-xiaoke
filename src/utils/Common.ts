@@ -548,7 +548,7 @@ async function random(devNo: string, success: any) {
           let data = hexString.slice(2, -2);
           if (crc16Modbus(data) == '0000') {
             console.log('CRC校验成功======>', hexString);
-            success(hexString)
+            success(data)
           }
         }
       },
