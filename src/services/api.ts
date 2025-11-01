@@ -1,4 +1,5 @@
 import httpClient from '../utils/request';
+import type { ResponseData } from '../utils/request';
 import { drsClient, backupClient } from '../utils/interceptors';
 import {
   ProjectInfo,
@@ -204,12 +205,12 @@ class ApiService {
    * 开始消费
    * -URL: /orders/app/consume/start
    */
-  async postConsumeStart(resData: any): Promise<PostConsumeStart> {
+  async postConsumeStart(resData: any): Promise<ResponseData<PostConsumeStart>> {
     const response = await httpClient.post<PostConsumeStart>(
       '/orders/app/consume/start',
       resData,
     );
-    return response.data;
+    return response;
   }
   /**
    * 查询订单状态
@@ -270,12 +271,28 @@ class ApiService {
     );
     return response.data;
   }
+  /**
+   * 发送随机数
+   * -URL:  /projects/agreement/agreementConsumer
+   */
+  async getAgreementConsumer(reqData: object): Promise<string> {
+    const response = await httpClient.post<string>(
+      '/projects/agreement/agreementConsumer',
+      reqData,
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      },
+    );
+    return response.data;
+  }
 
   // 示例开始
-  // 使用DRS服务检查蓝牙状态
-  async getBluetoothStatus(): Promise<{ status: boolean; message: string }> {
+  // 注意：如果要返回完整响应体，可以使用 ResponseData<T>
+  async getBluetoothStatus(): Promise<ResponseData<object>> {
     const response = await drsClient.get('/getBluetoothStatus');
-    return response.data;
+    return response;
   }
 
   // 使用备份服务

@@ -386,7 +386,7 @@ export function InitialBluetooth(
   deviceNo: string,
   excludeId = '',
 ) {
-  return new Promise(async (resolve, reject) => {
+  return new Promise(async (success, reject) => {
     try {
       let bluetoothId = '';
       excludeConsumeId = excludeId;
@@ -437,7 +437,7 @@ export function InitialBluetooth(
             // );
 
             shouldContinueCheck = true;
-            visitationBluetoothValue(mac, deviceNo); // 同步调用
+            visitationBluetoothValue(mac, deviceNo, success); // 同步调用
           } else {
             console.log('722蓝牙模块');
           }
@@ -450,7 +450,16 @@ export function InitialBluetooth(
   });
 }
 
-async function visitationBluetoothValue(mac: string, deviceNo: string) {
+/**
+ * 开始巡检
+ * @param mac
+ * @param deviceNo
+ */
+async function visitationBluetoothValue(
+  mac: string,
+  deviceNo: string,
+  success: any,
+) {
   console.log('开始巡检');
   let res = await apiService.agreementGather(deviceNo);
   console.log('巡检结果', res);
@@ -465,7 +474,7 @@ async function visitationBluetoothValue(mac: string, deviceNo: string) {
         if (crc16Modbus(data) == '0000') {
           console.log('CRC校验成功======>', hexString);
           if (data.includes('2a01')) {
-            delBluetoothOrders(data, deviceNo);
+            delBluetoothOrders(data, deviceNo, success);
           }
         }
       }
@@ -479,13 +488,22 @@ async function visitationBluetoothValue(mac: string, deviceNo: string) {
   );
 }
 
-async function delBluetoothOrders(data: string, deviceNo: string) {
+/**
+ * 删除蓝牙订单
+ * @param data
+ * @param deviceNo
+ */
+async function delBluetoothOrders(
+  data: string,
+  deviceNo: string,
+  success: any,
+) {
   let reqData = {
     devNo: deviceNo,
     encodeNotice: data,
     excludeConsumeId: excludeConsumeId,
   };
-  let res = await apiService.postCompleteNotice(reqData);
+  let res: any = await apiService.postCompleteNotice(reqData);
   console.log('删除订单结果', res);
   if (res.isEnd) {
     shouldContinueCheck = false;
@@ -493,6 +511,7 @@ async function delBluetoothOrders(data: string, deviceNo: string) {
     //取消所有监听事件
     bluetoothService.offBLECharacteristicValueChange();
     console.log('准备发送随机数');
+    random(deviceNo, success);
   } else {
     shouldContinueCheck = true;
     // 取消所有监听事件
@@ -501,6 +520,43 @@ async function delBluetoothOrders(data: string, deviceNo: string) {
       globalData.serviceID,
       globalData.writeCharacteristicUUID,
       res.encodeAnswer,
+    );
+  }
+}
+
+async function random(devNo: string, success: any) {
+  try {
+    let reqData = {
+      devNo,
+      orderId: excludeConsumeId,
+    };
+    const res = await apiService.getAgreementConsumer(reqData);
+    console.log('获取的随机数 code=', res);
+    await bluetoothService.monitorCharacteristic(
+      globalData.serviceID,
+      globalData.notifyCharacteristicUUID,
+      hexString => {
+        console.log('监听到蓝牙数据', hexString);
+        if (hexString.startsWith('7b') && hexString.endsWith('7d')) {
+          let data = hexString.slice(2, -2);
+          if (crc16Modbus(data) == '0000') {
+            console.log('CRC校验成功======>', hexString);
+            success(hexString)
+          }
+        }
+      },
+      true, // 设置为 false，不自动启用通知
+    );
+    await bluetoothService.writeCharacteristic(
+      globalData.serviceID,
+      globalData.writeCharacteristicUUID,
+      res,
+    );
+  } catch (error: any) {
+    console.log('获取随机数错误', error);
+    ToastAndroid.show(
+      error.msg || error.message || '获取随机数失败',
+      ToastAndroid.SHORT,
     );
   }
 }

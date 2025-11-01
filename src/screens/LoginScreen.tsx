@@ -52,7 +52,7 @@ const LoginScreen: React.FC = () => {
     console.log('登录');
     // 模拟存储token
     let token =
-      'eyJhbGciOiJIUzUxMiJ9.eyJ1c2VfZW5kIjoiTUVNQkVSX0EiLCJ1c2VyX2lkIjoxODM5MTQwOTg2MjUwMzEzNzI4LCJ1c2VyX2tleSI6IjE4MzkxNDA5ODYyNTAzMTM3MjgtZWU2NmNjNWYtOGRmMi00ZjQwLTg3ZjktYzU2MGU2Y2M4ZmUxIiwidXNlcm5hbWUiOiLnp6blp4vnmocifQ.V-kPH-sv5UMQLp4rsZHdw2x5TxSI72UFuyQjIoIz9tuYr9k5CneBqOinWOFqjHETYNgalXW6f21C-BBd48SRuw';
+      'eyJhbGciOiJIUzUxMiJ9.eyJ1c2VfZW5kIjoiTUVNQkVSX0EiLCJ1c2VyX2lkIjoxODM5MTQwOTg2MjUwMzEzNzI4LCJ1c2VyX2tleSI6IjE4MzkxNDA5ODYyNTAzMTM3MjgtMGRkMjY2ZjEtYjE1ZC00MTAyLWE1YmYtOTkxN2NiYzc2NWQ4IiwidXNlcm5hbWUiOiLnp6blp4vnmocifQ.t8pWIjR8MnvwT3Rqi5fsSi85I--7goZkHDGn-gtlAOcbGsmhtyQf92GAV1MoFu2iF3PqTpr1O76C00driobRqw';
     setToken(token);
     // 使用React Navigation跳转到主页面
     navigation.reset({

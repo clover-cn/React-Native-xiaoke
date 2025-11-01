@@ -88,12 +88,12 @@ const Xiyu: React.FC = () => {
   // 开始4g消费
   const start4GConsumption = async () => {
     console.log('检查设备状态');
-    bluetoothPayment();
-    return;
     showLoading({
       title: '启动中...',
       mask: true,
     });
+    bluetoothPayment();
+    return;
 
     let intervalId: any = null;
     let attempts = 0;
@@ -183,10 +183,12 @@ const Xiyu: React.FC = () => {
         liquid: '', // 加液标识 - tcl相关才有, '01':只加洗衣液/'02':加洗衣液和消毒液
         netType: '', // 设备网络类型, 0:4G/1:蓝牙 不传默认4g
         rateSettingId: '', // 费率设置id - 有就回传回来
-        consumeFrom: '1', // app消费的来源-0:(默认)扫屏幕码进入消费,1:从打印的静态码进入消费, 2:常用设备进入消费进入消费
+        consumeFrom: '0', // app消费的来源-0:(默认)扫屏幕码进入消费,1:从打印的静态码进入消费, 2:常用设备进入消费进入消费
       };
       let res = await apiService.postConsumeStart(reqData);
-      deviceStatus(res.consumeOrderId)
+      console.log('re', res.data.consumeOrderId);
+
+      deviceStatus(res.data.consumeOrderId)
         .then(devState => {
           const devStateStr = devState as string;
           if (parseInt(devStateStr) >= 1 && devStateStr !== '4') {
@@ -194,8 +196,8 @@ const Xiyu: React.FC = () => {
             setIsState(true);
             Deviceinfo.current = res;
             queryDeviceInfo();
-            storage.set('xiyuOrder', res.consumeOrderId);
-            consumeOrderId.current = res.consumeOrderId;
+            storage.set('xiyuOrder', res.data.consumeOrderId);
+            consumeOrderId.current = res.data.consumeOrderId;
             hideLoading(); // 启动成功后隐藏Loading
             ToastAndroid.show('启动成功', ToastAndroid.SHORT);
             // that.setData({
@@ -366,9 +368,12 @@ const Xiyu: React.FC = () => {
   // 蓝牙消费
   const bluetoothPayment = async () => {
     try {
-      await InitialBluetooth(deviceInfo.mac, deviceInfo.deviceNo);
-      hideLoading(); // 隐藏Loading
-      console.log('蓝牙初始化成功');
+      let hexString = (await InitialBluetooth(
+        deviceInfo.mac,
+        deviceInfo.deviceNo,
+      )) as string;
+      console.log('连接蓝牙成功', hexString);
+      varyBluetooth(hexString);
     } catch (error: any) {
       console.error('蓝牙初始化失败:', error);
       ToastAndroid.show(error.message, ToastAndroid.LONG);
@@ -393,6 +398,34 @@ const Xiyu: React.FC = () => {
       return content;
     } else {
       return '00:00-23:59';
+    }
+  };
+
+  // 创建蓝牙订单
+  const varyBluetooth = async (hexString: string) => {
+    try {
+      let reqData = {
+        consumeEncodeData: hexString, // 设备给APP的加密数据, 仅当netType为蓝牙时候需要传递
+        devNo: deviceInfo.deviceNo, // 	设备编号
+        gear: '', // 档位 - 有档位设备才传递,
+        liquid: '', // 加液标识 - tcl相关才有, '01':只加洗衣液/'02':加洗衣液和消毒液
+        netType: '1', // 设备网络类型, 0:4G/1:蓝牙 不传默认4g
+        rateSettingId: '', // 费率设置id - 有就回传回来
+        consumeFrom: '0', // app消费的来源-0:(默认)扫屏幕码进入消费,1:从打印的静态码进入消费, 2:常用设备进入消费进入消费
+      };
+      let res = await apiService.postConsumeStart(reqData);
+      if (res.code == 500100 || res.code == 500200) {
+        hideLoading();
+        destroy();
+        ToastAndroid.show('余额不足请先充值', ToastAndroid.SHORT);
+      } else {
+        console.log('创建蓝牙订单',res);
+        
+      }
+    } catch (error: any) {
+      hideLoading();
+      destroy();
+      ToastAndroid.show(error.msg, ToastAndroid.SHORT);
     }
   };
 
