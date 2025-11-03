@@ -46,6 +46,11 @@ export const storage = {
   delete(key: string): void {
     mmkv.delete(key);
   },
+
+  // 清空所有键（同步）
+  clearAll(): void {
+    mmkv.clearAll();
+  },
 };
 
 export default storage;
