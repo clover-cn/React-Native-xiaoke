@@ -448,9 +448,9 @@ export function InitialBluetooth(
             }
           } catch (err: any) {
             console.error('连接或获取服务失败:', err);
-            hideLoading()
+            hideLoading();
             // 抛出让 scanDevices 捕获并 reject，从而被 InitialBluetooth 外层 try/catch 捕获
-            throw (err instanceof Error ? err : new Error(String(err)));
+            throw err instanceof Error ? err : new Error(String(err));
           }
         }
       });
@@ -480,6 +480,7 @@ async function visitationBluetoothValue(
     globalData.notifyCharacteristicUUID,
     hexString => {
       console.log('监听到蓝牙数据', hexString);
+      failTimeout(true);
       if (hexString.startsWith('7b') && hexString.endsWith('7d')) {
         let data = hexString.slice(2, -2);
         if (crc16Modbus(data) == '0000') {
@@ -497,6 +498,7 @@ async function visitationBluetoothValue(
     globalData.writeCharacteristicUUID,
     res,
   );
+  failTimeout(false);
 }
 
 /**
@@ -548,11 +550,12 @@ async function random(devNo: string, success: any) {
       globalData.notifyCharacteristicUUID,
       hexString => {
         console.log('监听到蓝牙数据', hexString);
+        failTimeout(true);
         if (hexString.startsWith('7b') && hexString.endsWith('7d')) {
           let data = hexString.slice(2, -2);
           if (crc16Modbus(data) == '0000') {
             console.log('CRC校验成功======>', hexString);
-            success(data)
+            success(data);
           }
         }
       },
@@ -563,6 +566,7 @@ async function random(devNo: string, success: any) {
       globalData.writeCharacteristicUUID,
       res,
     );
+    failTimeout(false);
   } catch (error: any) {
     console.log('获取随机数错误', error);
     ToastAndroid.show(
@@ -570,4 +574,22 @@ async function random(devNo: string, success: any) {
       ToastAndroid.SHORT,
     );
   }
+}
+
+/**
+ * 所有数据包已发送完毕后启动定时器，一定时间没有销毁就直接出错
+ */
+let timerState = '' as any;
+function failTimeout(isOn: boolean, num = 5000) {
+  if (isOn && timerState) {
+    clearTimeout(timerState);
+    timerState = '';
+    return;
+  }
+  timerState = setTimeout(() => {
+    console.log('响应超时，关闭蓝牙');
+    hideLoading();
+    destroy();
+    ToastAndroid.show('蓝牙响应超时', ToastAndroid.SHORT);
+  }, num);
 }
