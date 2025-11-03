@@ -41,6 +41,8 @@ const Xiyu: React.FC = () => {
   useEffect(() => {
     console.log('获取安全区', insets);
     console.log('传入的设备信息：', deviceInfo);
+    // chargingType	计费方式 00计量、01计时、02定时、03定量
+    console.log('计费方式', deviceInfo.chargingType);
     queryOrderStatus();
     // 监听应用状态变化
     let backgroundTimer: any = null;
@@ -201,7 +203,6 @@ const Xiyu: React.FC = () => {
             queryDeviceInfo();
             storage.set('xiyuOrder', res.data.consumeOrderId);
             consumeOrderId.current = res.data.consumeOrderId;
-            hideLoading(); // 启动成功后隐藏Loading
             ToastAndroid.show('启动成功', ToastAndroid.SHORT);
             // that.setData({
             //   Deviceinfo: res.data.data,
@@ -219,10 +220,8 @@ const Xiyu: React.FC = () => {
             //   title: '启动成功',
             //   icon: 'success',
           } else if (devStateStr === '4') {
-            hideLoading(); // 订单取消时隐藏Loading
             ToastAndroid.show('订单已取消，请重试。', ToastAndroid.SHORT);
           } else {
-            hideLoading(); // 设备响应超时时隐藏Loading
             console.log('设备响应超时，开始启动蓝牙');
             // common
             //   .InitialBluetooth(
@@ -237,6 +236,7 @@ const Xiyu: React.FC = () => {
             //     common.CutoffBluetooth();
             //   });
           }
+          hideLoading(); // 设备响应超时时隐藏Loading
         })
         .catch(err => {
           hideLoading(); // 启动失败时隐藏Loading
@@ -478,14 +478,34 @@ const Xiyu: React.FC = () => {
                   '1A': '设备处于禁用时段',
                   '1B': '设备维护中',
                 };
+                if (
+                  res.answerFlag == '00' &&
+                  (deviceInfo.chargingType == '00' ||
+                    deviceInfo.chargingType == '01')
+                ) {
+                  // that.setData({
+                  //   isState: true,
+                  //   xiyuBluetooth: true,
+                  // });
+                  // that.setStorage();
+                  // wx.setStorageSync('xiyuBluetooth', true);
+                  // wx.setStorageSync(that.data.param.deviceNo, {
+                  //   isOffline: false,
+                  //   deviceNo: that.data.param.deviceNo,
+                  // });
+                  setIsState(true);
+                  consumeOrderId.current = res.consumeOrderId;
+                  storage.set('xiyuOrder', res.consumeOrderId);
+                  ToastAndroid.show('启动成功', ToastAndroid.SHORT);
+                }
                 if (res.answerFlag !== '00') {
                   ToastAndroid.show(
                     answerFlagMessages[res.answerFlag],
                     ToastAndroid.SHORT,
                   );
-                  // 报错 需要重新查询一次状态
-                  queryDeviceInfo();
                 }
+                // 需要重新查询一次状态
+                queryDeviceInfo();
                 hideLoading();
                 destroy();
               } catch (error: any) {
