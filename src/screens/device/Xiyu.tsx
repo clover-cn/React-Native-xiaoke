@@ -434,8 +434,10 @@ const Xiyu: React.FC = () => {
         }
         // 判断是否有开启及时支付
         if (res.data.isImmediately) {
+          consumeOrderId.current = res.data.consumeOrderId;
           console.log('开启及时支付，并且余额不足去支付');
         }
+        consumeOrderId.current = res.data.consumeOrderId;
         startBluetoothConsumption(res.data.encodeOrder);
       }
     } catch (error: any) {
