@@ -833,13 +833,10 @@ class BluetoothService {
   /**断开所有设备 */
   async disconnectAllDevices(): Promise<void> {
     try {
-      await this.offBLECharacteristicValueChange();
       const connectedDevices = await this.getConnectedDevices();
-
-      if (connectedDevices.length === 0) {
-        console.log('没有已连接的设备');
-        return;
-      }
+      if (connectedDevices.length === 0) return
+      
+      await this.offBLECharacteristicValueChange();
 
       console.log(`发现${connectedDevices.length}个已连接的设备，开始断开...`);
 

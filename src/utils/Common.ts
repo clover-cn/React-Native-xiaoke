@@ -242,8 +242,6 @@ export function getDeviceinfo(devNo: string) {
     apiService
       .getDeviceInfo(devNo)
       .then(res => {
-        console.log('?????????', res);
-
         if (res.onlineState === '0' && res.state === '0') {
           console.log('设备在线，状态正常');
           resolve(true);
