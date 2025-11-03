@@ -1148,6 +1148,7 @@ class BluetoothService {
     );
   }
 }
-
+ 
 export type { Device };
+export const bluetoothService = new BluetoothService();
 export default BluetoothService;

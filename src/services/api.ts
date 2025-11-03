@@ -11,6 +11,7 @@ import {
   GetDeviceInfo,
   QueryOrderStatus,
   PostConsumeStart,
+  PostConsumeBlueAnswer,
 } from '../types/apiTypes';
 // 用户相关接口
 export interface User {
@@ -275,7 +276,7 @@ class ApiService {
    * 发送随机数
    * -URL:  /projects/agreement/agreementConsumer
    */
-  async getAgreementConsumer(reqData: object): Promise<string> {
+  async postAgreementConsumer(reqData: object): Promise<string> {
     const response = await httpClient.post<string>(
       '/projects/agreement/agreementConsumer',
       reqData,
@@ -284,6 +285,17 @@ class ApiService {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
       },
+    );
+    return response.data;
+  }
+  /**
+   * 蓝牙下发订单后应答
+   * -URL:  /orders/app/consume/blue/answer
+   */
+  async postConsumeBlueAnswer(reqData: object): Promise<PostConsumeBlueAnswer> {
+    const response = await httpClient.post<PostConsumeBlueAnswer>(
+      '/orders/app/consume/blue/answer',
+      reqData
     );
     return response.data;
   }

@@ -22,9 +22,13 @@ import {
   storage,
   InitialBluetooth,
   destroy,
+  crc16Modbus,
 } from '../../utils/Common';
 import { useFocusEffect, useRoute } from '@react-navigation/native';
 import { showLoading, hideLoading } from '../../services/loadingService';
+import { bluetoothService } from '../../services/bluetoothService';
+import globalData from '../../utils/globalData';
+// 复用全局蓝牙服务单例实例
 const Xiyu: React.FC = () => {
   const insets = useSafeAreaInsets(); // 获取安全区域边距
   // 接收参数
@@ -33,7 +37,7 @@ const Xiyu: React.FC = () => {
   const [isState, setIsState] = useState(false); // 设备是否在使用中
   const [deviceInfo, setDeviceInfo] = useState(devInfo.device || {});
   const labelMap: any = { '0': '空闲', '1': '使用中', '2': '离线' };
-
+  const shouldContinueCheck = useRef<boolean>(false);
   useEffect(() => {
     console.log('获取安全区', insets);
     console.log('传入的设备信息：', deviceInfo);
@@ -376,7 +380,7 @@ const Xiyu: React.FC = () => {
       varyBluetooth(hexString);
     } catch (error: any) {
       console.error('蓝牙初始化失败:', error);
-      ToastAndroid.show(error.message, ToastAndroid.LONG);
+      ToastAndroid.show(error, ToastAndroid.LONG);
       hideLoading(); // 隐藏Loading
       return;
     }
@@ -419,13 +423,90 @@ const Xiyu: React.FC = () => {
         destroy();
         ToastAndroid.show('余额不足请先充值', ToastAndroid.SHORT);
       } else {
-        console.log('创建蓝牙订单',res);
-        
+        console.log('创建蓝牙订单', res);
+        if (
+          res.data.waitPayConsumeOrderIds &&
+          res.data.waitPayConsumeOrderIds.length > 0
+        ) {
+          console.log('还有未完成的订单');
+          hideLoading();
+          destroy();
+          return;
+        }
+        // 判断是否有开启及时支付
+        if (res.data.isImmediately) {
+          console.log('开启及时支付，并且余额不足去支付');
+        }
+        startBluetoothConsumption(res.data.encodeOrder);
       }
     } catch (error: any) {
       hideLoading();
       destroy();
       ToastAndroid.show(error.msg, ToastAndroid.SHORT);
+    }
+  };
+
+  // 开始蓝牙消费
+  const startBluetoothConsumption = async (encodeOrder: string) => {
+    shouldContinueCheck.current = true;
+    console.log('蓝牙开始消费');
+    try {
+      await bluetoothService.monitorCharacteristic(
+        globalData.serviceID,
+        globalData.notifyCharacteristicUUID,
+        async hexString => {
+          console.log('监听到蓝牙数据', hexString);
+          if (hexString.startsWith('7b') && hexString.endsWith('7d')) {
+            let data = hexString.slice(2, -2);
+            if (crc16Modbus(data) == '0000') {
+              console.log('CRC校验成功======>', hexString);
+              try {
+                let reqData = {
+                  consumeOrderId: consumeOrderId.current, // 消费的订单id
+                  devNo: deviceInfo.deviceNo, // 设备imei
+                  encodeData: data, // 设备应答加密字符串
+                };
+                let res = await apiService.postConsumeBlueAnswer(reqData);
+                console.log('启动结果', res);
+                const answerFlagMessages: { [key: string]: string } = {
+                  '00': '启动成功',
+                  '01': '卡消费中',
+                  '02': '其他订单正在消费中',
+                  '03': '其他原因失败',
+                  '08': '不支持的消费模式',
+                  '09': '设备处于免费模式',
+                  '10': '设备被他人预订',
+                  '1A': '设备处于禁用时段',
+                  '1B': '设备维护中',
+                };
+                if (res.answerFlag !== '00') {
+                  ToastAndroid.show(
+                    answerFlagMessages[res.answerFlag],
+                    ToastAndroid.SHORT,
+                  );
+                  // 报错 需要重新查询一次状态
+                  queryDeviceInfo();
+                }
+                hideLoading();
+                destroy();
+              } catch (error: any) {
+                hideLoading();
+                destroy();
+                ToastAndroid.show(error.msg, ToastAndroid.SHORT);
+              }
+            }
+          }
+        },
+        true, // 设置为 false，不自动启用通知
+      );
+
+      await bluetoothService.writeCharacteristic(
+        globalData.serviceID,
+        globalData.writeCharacteristicUUID,
+        encodeOrder,
+      );
+    } catch (error) {
+      console.log('蓝牙消费出错', error);
     }
   };
 

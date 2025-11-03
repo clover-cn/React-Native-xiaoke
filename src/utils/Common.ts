@@ -4,10 +4,9 @@ import { MMKV } from 'react-native-mmkv';
 import { ComputeType, ComputeResult } from '../types/commonType';
 import { ToastAndroid } from 'react-native';
 import apiService from '../services/api';
-import BluetoothService from '../services/bluetoothService';
+import { bluetoothService } from '../services/bluetoothService';
 import globalData from './globalData';
-// 创建蓝牙服务单例实例
-let bluetoothService = new BluetoothService();
+// 复用全局蓝牙服务单例实例
 // 单例存储实例（如需分命名空间，可新建不同 id 的 MMKV 实例）
 const mmkv = new MMKV();
 let shouldContinueCheck = false;
@@ -350,7 +349,7 @@ function arrayBufferToHex(arrayBuffer: any, cache: string) {
 }
 
 /**crc16计算 */
-function crc16Modbus(hexString: string) {
+export function crc16Modbus(hexString: string) {
   // 将十六进制字符串转换为字节数组
   var byteArray = [];
   for (var i = 0; i < hexString.length; i += 2) {
@@ -443,7 +442,7 @@ export function InitialBluetooth(
             } else {
               console.log('722蓝牙模块');
             }
-          } catch (err) {
+          } catch (err: any) {
             console.error('连接或获取服务失败:', err);
             // 抛出让 scanDevices 捕获并 reject，从而被 InitialBluetooth 外层 try/catch 捕获
             throw (err instanceof Error ? err : new Error(String(err)));
@@ -537,7 +536,7 @@ async function random(devNo: string, success: any) {
       devNo,
       orderId: excludeConsumeId,
     };
-    const res = await apiService.getAgreementConsumer(reqData);
+    const res = await apiService.postAgreementConsumer(reqData);
     console.log('获取的随机数 code=', res);
     await bluetoothService.monitorCharacteristic(
       globalData.serviceID,
