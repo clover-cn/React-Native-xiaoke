@@ -480,7 +480,7 @@ async function visitationBluetoothValue(
     globalData.notifyCharacteristicUUID,
     hexString => {
       console.log('监听到蓝牙数据', hexString);
-      failTimeout(true);
+      failTimeout(false);
       if (hexString.startsWith('7b') && hexString.endsWith('7d')) {
         let data = hexString.slice(2, -2);
         if (crc16Modbus(data) == '0000') {
@@ -498,7 +498,7 @@ async function visitationBluetoothValue(
     globalData.writeCharacteristicUUID,
     res,
   );
-  failTimeout(false);
+  failTimeout(true);
 }
 
 /**
@@ -550,7 +550,7 @@ async function random(devNo: string, success: any) {
       globalData.notifyCharacteristicUUID,
       hexString => {
         console.log('监听到蓝牙数据', hexString);
-        failTimeout(true);
+        failTimeout(false);
         if (hexString.startsWith('7b') && hexString.endsWith('7d')) {
           let data = hexString.slice(2, -2);
           if (crc16Modbus(data) == '0000') {
@@ -566,7 +566,7 @@ async function random(devNo: string, success: any) {
       globalData.writeCharacteristicUUID,
       res,
     );
-    failTimeout(false);
+    failTimeout(true);
   } catch (error: any) {
     console.log('获取随机数错误', error);
     ToastAndroid.show(
@@ -576,12 +576,15 @@ async function random(devNo: string, success: any) {
   }
 }
 
+let timerState = '' as any;
 /**
  * 所有数据包已发送完毕后启动定时器，一定时间没有销毁就直接出错
+ * @param isOn true启动定时器，false销毁正在运行的定时器
+ * @param num 超时时间，默认5000ms
+ * @returns 
  */
-let timerState = '' as any;
 function failTimeout(isOn: boolean, num = 5000) {
-  if (isOn && timerState) {
+  if (!isOn && timerState) {
     clearTimeout(timerState);
     timerState = '';
     return;
