@@ -6,6 +6,7 @@ import { ToastAndroid } from 'react-native';
 import apiService from '../services/api';
 import { bluetoothService } from '../services/bluetoothService';
 import globalData from './globalData';
+import { hideLoading } from '../services/loadingService';
 // 复用全局蓝牙服务单例实例
 // 单例存储实例（如需分命名空间，可新建不同 id 的 MMKV 实例）
 const mmkv = new MMKV();
@@ -444,6 +445,7 @@ export function InitialBluetooth(
             }
           } catch (err: any) {
             console.error('连接或获取服务失败:', err);
+            hideLoading()
             // 抛出让 scanDevices 捕获并 reject，从而被 InitialBluetooth 外层 try/catch 捕获
             throw (err instanceof Error ? err : new Error(String(err)));
           }

@@ -1,5 +1,5 @@
 import { Alert, ToastAndroid } from 'react-native';
-import httpClient, { RequestConfig } from './request';
+import httpClient, { RequestConfig, HttpError } from './request';
 
 // 使用公共封装的 storage（基于 MMKV）
 import storage from './Common';
@@ -15,6 +15,13 @@ const cleanString = (str: string): string => {
     .trim()
     .replace(/\s+/g, ' ')
     .replace(/[\r\n\t]/g, '');
+};
+
+// 限制文本长度用于控制台输出，避免超长日志卡死
+const previewText = (text?: string, max: number = 4000): string | undefined => {
+  if (typeof text !== 'string') return text as any;
+  if (text.length <= max) return text;
+  return text.slice(0, max) + `... [truncated ${text.length - max} chars]`;
 };
 
 class BusinessError<T = unknown> extends Error {
@@ -124,35 +131,65 @@ const commonResponseInterceptor = async (
     const data = await clonedResponse.json();
     // console.log('响应数据:', data);
 
-    // 只处理成功HTTP响应中的业务错误码
-    if (data.code && data.code != 200 && data.code != 0) {
-      const businessMessage = cleanString(
-        data.message || data.msg || 'Unknown error',
-      );
-      console.warn('⚠️ Business Error:', businessMessage);
+    // 只处理成功HTTP响应中的业务错误码（兼容字符串/数字）
+    const hasCode = Object.prototype.hasOwnProperty.call(data || {}, 'code');
+    if (hasCode) {
+      const codeNum = Number(data.code);
+      if (codeNum !== 200 && codeNum !== 0) {
+        const businessMessage = cleanString(
+          data.message || data.msg || 'Unknown error',
+        );
+        console.warn(
+          '⚠️ Business Error:',
+          businessMessage,
+          '(code:',
+          data.code,
+          ')',
+        );
 
-      // 根据错误码进行不同处理
-      switch (data.code) {
-        case 401:
-          // 未授权，清除token并跳转登录
-          ToastAndroid.show('登录已过期，请重新登录', ToastAndroid.SHORT);
-          clearToken();
-          setTimeout(() => {
-            if (navigationRef.isReady()) {
-              navigationRef.reset({
-                index: 0,
-                routes: [{ name: 'Auth' }],
-              });
-            }
-          }, 100);
-          throw new BusinessError(data.code, businessMessage, data);
-        case 403:
-          Alert.alert('提示', '没有权限访问该资源');
-          navigationRef.goBack();
-          throw new BusinessError(data.code, businessMessage, data);
-        default:
-          // ToastAndroid.show(businessMessage, ToastAndroid.SHORT);
-          throw new BusinessError(data.code, businessMessage, data);
+        // 输出业务错误的详细上下文（请求/响应）
+        const headersObj = Object.fromEntries(response.headers.entries());
+        const reqCtx = (response as any).__req;
+        const respText = (response as any).__respText;
+        console.error('🟡 业务错误（详细上下文）:', {
+          request: {
+            url: reqCtx?.url,
+            method: reqCtx?.method,
+            headers: reqCtx?.headers,
+            body: previewText(reqCtx?.body),
+          },
+          response: {
+            url: response.url,
+            status: response.status,
+            statusText: response.statusText,
+            headers: headersObj,
+            bodyText: previewText(respText),
+          },
+          business: { code: data.code, message: businessMessage },
+        });
+
+        // 根据错误码进行不同处理（统一按数字处理，兼容字符串code）
+        switch (codeNum) {
+          case 401:
+            // 未授权，清除token并跳转登录
+            ToastAndroid.show('登录已过期，请重新登录', ToastAndroid.SHORT);
+            clearToken();
+            setTimeout(() => {
+              if (navigationRef.isReady()) {
+                navigationRef.reset({
+                  index: 0,
+                  routes: [{ name: 'Auth' }],
+                });
+              }
+            }, 100);
+            throw new BusinessError(codeNum, businessMessage, data);
+          case 403:
+            Alert.alert('提示', '没有权限访问该资源');
+            navigationRef.goBack();
+            throw new BusinessError(codeNum, businessMessage, data);
+          default:
+            throw new BusinessError(codeNum, businessMessage, data);
+        }
       }
     }
   } catch (error) {
@@ -169,14 +206,38 @@ const commonResponseInterceptor = async (
 
 // 错误拦截器：统一处理HTTP状态码错误和网络错误（处理HTTP状态码错误）
 const errorInterceptor = async (error: Error): Promise<never> => {
-  console.error('❌ 请求错误:', error);
+  // console.error('❌ 请求错误:', error);
 
   // 如果是业务错误，直接重新抛出
   if (error instanceof BusinessError) {
     throw error;
   }
 
-  let errorMessage = '网络请求失败';
+  // 如果是HTTP错误（包含请求/响应上下文），输出详细日志
+  if (error instanceof HttpError) {
+    const req = error.request;
+    const resp = error.response;
+    console.error('🧨 HTTP请求失败（详细上下文）:', {
+      request: {
+        url: req?.url,
+        method: req?.method,
+        headers: req?.headers,
+        body: previewText(req?.body),
+      },
+      response: resp
+        ? {
+            status: resp.status,
+            statusText: resp.statusText,
+            url: resp.url,
+            headers: resp.headers,
+            bodyText: previewText(resp.bodyText),
+          }
+        : undefined,
+      message: error.message,
+    });
+  }
+
+  let errorMessage = error.message || '网络请求失败';
 
   // 处理网络错误
   if (error.name === 'AbortError') {

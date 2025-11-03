@@ -42,7 +42,6 @@ const Xiyu: React.FC = () => {
     console.log('获取安全区', insets);
     console.log('传入的设备信息：', deviceInfo);
     queryOrderStatus();
-
     // 监听应用状态变化
     let backgroundTimer: any = null;
 

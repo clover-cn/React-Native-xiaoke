@@ -31,6 +31,35 @@ export type ResponseInterceptor = (response: Response) => Response | Promise<Res
 // 错误拦截器类型
 export type ErrorInterceptor = (error: Error) => Promise<never> | Error;
 
+// 附加: HTTP错误类型，携带请求/响应上下文，便于错误拦截器输出详细信息
+export interface HttpErrorRequestInfo {
+  url: string;
+  method: RequestMethod;
+  headers?: Record<string, string>;
+  body?: string;
+}
+
+export interface HttpErrorResponseInfo {
+  status: number;
+  statusText: string;
+  headers: Record<string, string>;
+  url: string;
+  bodyText?: string;
+}
+
+export class HttpError extends Error {
+  request: HttpErrorRequestInfo;
+  response?: HttpErrorResponseInfo;
+
+  constructor(message: string, request: HttpErrorRequestInfo, response?: HttpErrorResponseInfo) {
+    super(message);
+    this.name = 'HttpError';
+    this.request = request;
+    this.response = response;
+    Object.setPrototypeOf(this, HttpError.prototype);
+  }
+}
+
 class HttpClient {
   private baseURL: string;
   private timeout: number;
@@ -136,6 +165,21 @@ class HttpClient {
     return fullUrl;
   }
 
+  // 安全序列化（用于日志/诊断）
+  private safeStringify(val: any): string {
+    try {
+      if (typeof val === 'string') return val;
+      if (val instanceof URLSearchParams) return val.toString();
+      // RN 环境下 FormData 存在但不可直接枚举
+      // 仅标识为 [FormData] 避免崩溃
+      // @ts-ignore
+      if (typeof FormData !== 'undefined' && val instanceof FormData) return '[FormData]';
+      return JSON.stringify(val);
+    } catch {
+      return String(val);
+    }
+  }
+
   // 核心请求方法
   async request<T = any>(config: RequestConfig): Promise<ResponseData<T>> {
     try {
@@ -171,18 +215,25 @@ class HttpClient {
         signal: controller.signal,
       };
 
+
+      let requestBodyPreview: string | undefined;
+
       // 处理请求体
       if (data && method !== 'GET') {
         if (mergedHeaders['Content-Type']?.includes('application/json')) {
           fetchOptions.body = JSON.stringify(data);
+          requestBodyPreview = this.safeStringify(data);
         } else if (mergedHeaders['Content-Type']?.includes('application/x-www-form-urlencoded')) {
           // 自动处理 application/x-www-form-urlencoded 格式
           if (typeof data === 'string') {
             // 如果已经是字符串，直接使用
             fetchOptions.body = data;
+            requestBodyPreview = data;
           } else if (data instanceof URLSearchParams) {
             // 如果是 URLSearchParams 实例，转换为字符串
-            fetchOptions.body = data.toString();
+            const s = data.toString();
+            fetchOptions.body = s;
+            requestBodyPreview = s;
           } else {
             // 如果是普通对象，自动转换为 URLSearchParams 格式
             const formData = new URLSearchParams();
@@ -191,14 +242,22 @@ class HttpClient {
                 formData.append(key, String(value));
               }
             });
-            fetchOptions.body = formData.toString();
+            const s = formData.toString();
+            fetchOptions.body = s;
+            requestBodyPreview = s;
           }
-        } else if (data instanceof FormData) {
+        } else if (
+          // @ts-ignore
+          typeof FormData !== 'undefined' && data instanceof FormData
+        ) {
           fetchOptions.body = data;
           // FormData会自动设置Content-Type，需要删除手动设置的
-          delete mergedHeaders['Content-Type'];
+          delete (mergedHeaders as any)['Content-Type'];
+          requestBodyPreview = '[FormData]';
         } else {
-          fetchOptions.body = data;
+          // 其它类型（如纯文本）
+          fetchOptions.body = data as any;
+          requestBodyPreview = this.safeStringify(data);
         }
       }
 
@@ -208,12 +267,44 @@ class HttpClient {
       // 清除超时定时器
       clearTimeout(timeoutId);
 
+      // 在拦截器处理前，克隆响应并预读文本用于错误时输出
+      const responseClone = response.clone();
+      let responseText: string | undefined;
+      try {
+        responseText = await responseClone.text();
+      } catch {
+        responseText = undefined;
+      }
+
+      // 在传入响应拦截器前，附加请求/响应上下文，供业务错误日志使用
+      (response as any).__req = {
+        url: fullURL,
+        method,
+        headers: mergedHeaders,
+        body: requestBodyPreview,
+      };
+      (response as any).__respText = responseText;
+
       // 处理响应拦截器
       response = await this.processResponseInterceptors(response);
 
       // 检查响应状态
       if (!response.ok) {
-        throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
+        const headersObj = Object.fromEntries(response.headers.entries());
+        const respInfo = {
+          status: response.status,
+          statusText: response.statusText,
+          headers: headersObj,
+          url: response.url,
+          bodyText: responseText,
+        };
+        const reqInfo = {
+          url: fullURL,
+          method,
+          headers: mergedHeaders,
+          body: requestBodyPreview,
+        };
+        throw new HttpError(`HTTP Error: ${response.status} ${response.statusText}`, reqInfo, respInfo);
       }
 
       // 解析响应数据
@@ -221,8 +312,39 @@ class HttpClient {
       return responseData;
 
     } catch (error) {
-      // 处理错误拦截器
-      return await this.processErrorInterceptors(error as Error);
+      const err = error as Error;
+
+      // 直接透传业务错误，避免被包装导致页面无法识别 msg/code
+      if ((err as any)?.name === 'BusinessError') {
+        // 不走错误拦截器，直接抛给业务页面
+        throw err;
+      }
+
+      // 已经是 HttpError，直接交给错误拦截器
+      if (err instanceof HttpError) {
+        return await this.processErrorInterceptors(err);
+      }
+
+      // 其它错误统一包装为 HttpError，附带请求上下文，便于定位
+      try {
+        const wrapped = new HttpError(err.message, {
+          url: config.baseURL ? this.buildURL(config.url, config.params, config.baseURL) : this.buildURL(config.url, config.params),
+          method: config.method || 'GET',
+          headers: { ...this.defaultHeaders, ...(config.headers || {}) },
+          body: config.data
+            ? (typeof config.data === 'string'
+                ? config.data
+                // @ts-ignore
+                : (typeof FormData !== 'undefined' && config.data instanceof FormData)
+                  ? '[FormData]'
+                  : this.safeStringify(config.data))
+            : undefined,
+        });
+        wrapped.name = err.name || 'Error';
+        return await this.processErrorInterceptors(wrapped);
+      } catch {
+        return await this.processErrorInterceptors(err);
+      }
     }
   }
 
